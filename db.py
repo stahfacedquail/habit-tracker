@@ -1,5 +1,6 @@
 import sqlite3
 import data
+from utils import make_uuid
 
 # global database connection for the application
 db = None
@@ -10,10 +11,7 @@ def connect(db_name="main.db"):
     db = sqlite3.connect(db_name)
 
 
-def create_tables():
-    if db is None:
-        return
-
+def setup_tables():
     cur = db.cursor()
     # clear old data
     cur.execute("DROP TABLE IF EXISTS recurrence_types")
@@ -57,4 +55,25 @@ def create_tables():
         INSERT INTO activities VALUES(?, ?, ?)
     """, data.predefined_activities)
     db.commit()
+
+
+def create_habit(title, recurrence, created_at):
+    cur = db.cursor()
+    uuid = make_uuid()
+
+    if created_at is None:
+        cur.execute("""
+            INSERT INTO habits(uuid, title, recurrence)
+            VALUES(?, ?, ?)
+        """, (uuid, title, recurrence))
+    else:
+        cur.execute("""
+            INSERT INTO habits VALUES(?, ?, ?, ?)
+        """, (uuid, title, recurrence, created_at))
+    db.commit()
+    cur.execute("""SELECT * FROM habits WHERE uuid = ?""", (uuid,))
+    new_habit = cur.fetchone()
+    print("DB")
+    print(new_habit)
+    return new_habit
 
