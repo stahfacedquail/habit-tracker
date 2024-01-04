@@ -110,18 +110,14 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         """
         is_daily = self.__recurrence__ == "daily"
 
-        group_activities_into_intervals = utils.group_performances_per_day if is_daily else utils.group_performances_per_week
+        group_activities_by_intervals = utils.group_performances_per_day if is_daily else utils.group_performances_per_week
         count_intervals_between = utils.get_num_days_from_to if is_daily else utils.get_num_weeks_from_to
         is_next_interval = utils.is_next_day if is_daily else utils.is_next_week
 
-        activities_grouped_per_interval = group_activities_into_intervals(self)
-        for group in activities_grouped_per_interval:
-            print("Interval start:", datetime.datetime.strftime(group["interval_start"], "%Y-%m-%d %H:%M:%S"))
-            for activity in group["activities"]:
-                print(str(activity))
+        activities_grouped_per_interval = group_activities_by_intervals(self)
         streaks = []
 
-        # If we peek ahead and see that we might be observing a streak, this variable holds onto the date of the current
+        # If we peek ahead and see that we are observing a streak, this variable holds onto the date of the current
         # activity group
         streak_start = None
 
