@@ -49,6 +49,24 @@ class TestHabit:
         assert execution.get_performed_at().month == date.today().month
         assert execution.get_performed_at().year == date.today().year
 
+    def test_to_string(self):
+        habit = Habit("Practise piano", "daily", "2023-05-28 18:57:19")
+        habit_string = str(habit).split("\n")
+        assert habit_string[0] == "Title: Practise piano"
+        assert habit_string[1] == "Recurs: daily"
+        assert habit_string[2] == "Created at: 2023-05-28 18:57:19"
+        assert habit_string[3] == "Has been performed 0 times"
+
+        habit.perform()
+        habit_string = str(habit).split("\n")
+        assert habit_string[3] == "Has been performed 1 time"
+
+        habit.perform()
+        habit.perform()
+        habit.perform()
+        habit_string = str(habit).split("\n")
+        assert habit_string[3] == "Has been performed 4 times"
+
     def teardown_method(self):
         db.remove_tables()
         db.disconnect()

@@ -46,12 +46,10 @@ class Habit:
         return self.__activities__
 
     def __str__(self):
-        return f"""
-Title: {self.__title__}
+        return f"""Title: {self.__title__}
 Recurs: {self.__recurrence__}
 Created at: {self.__created_at__}
-Has been performed {len(self.__activities__)} times
-        """
+Has been performed {len(self.__activities__)} time{"" if len(self.__activities__) == 1 else "s"}"""
 
     def __refresh__(self):
         """
