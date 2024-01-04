@@ -1,13 +1,13 @@
 import sqlite3
-from uuid import uuid4
+import data
 
 # global database connection for the application
 db = None
 
 
-def connect():
+def connect(db_name="main.db"):
     global db
-    db = sqlite3.connect("main.db")
+    db = sqlite3.connect(db_name)
 
 
 def create_tables():
@@ -39,16 +39,22 @@ def create_tables():
                 REFERENCES recurrence_types (type)
         )
     """)
-    data = [
-        (str(uuid4()), "Jog", "daily"),
-        (str(uuid4()), "Phone parents", "weekly"),
-        (str(uuid4()), "Read a novel", "daily"),
-        (str(uuid4()), "Journal", "weekly"),
-        (str(uuid4()), "isiXhosa lesson", "weekly")
-    ]
     cur.executemany("""
-        INSERT INTO habits(uuid, title, recurrence)
-        VALUES (?, ?, ?)
-    """, data)
+        INSERT INTO habits VALUES (?, ?, ?, ?)
+    """, data.predefined_habits)
+    db.commit()
+
+    cur.execute("""
+        CREATE TABLE activities(
+            uuid TEXT PRIMARY KEY,
+            habit TEXT NOT NULL,
+            performed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (habit)
+                REFERENCES habits(uuid)
+        )
+    """)
+    cur.executemany("""
+        INSERT INTO activities VALUES(?, ?, ?)
+    """, data.predefined_activities)
     db.commit()
 
