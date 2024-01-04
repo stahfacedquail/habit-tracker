@@ -24,12 +24,21 @@ class Activity:
         """
         self.__parse_from_db__(activity_tuple)
 
+    def get_uuid(self):
+        return self.__uuid__
+
+    def get_habit_uuid(self):
+        return self.__habit__
+
+    def get_performed_at(self):
+        return self.__performed_at__
+
     def __parse_from_db__(self, activity_tuple: tuple[str, str, str]):
         """
         Translate the data from an activity database record to this `Activity` model object.
         :param activity_tuple: A record from the `activities` database table
         :return: None
         """
-        self.uuid = activity_tuple[0]
-        self.habit = activity_tuple[1]
-        self.performed_at = utils.to_datetime(activity_tuple[2])
+        self.__uuid__ = activity_tuple[0]
+        self.__habit__ = activity_tuple[1]
+        self.__performed_at__ = utils.to_datetime(activity_tuple[2])
