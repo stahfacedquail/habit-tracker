@@ -1,3 +1,5 @@
+import datetime
+
 from db import create_habit, get_habit
 from multimethod import multimethod
 from typing import Union, Optional
@@ -93,3 +95,51 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         self.__activities__ = []
         for activity in db_activities:
             self.__activities__.append(Activity(activity))
+
+    def get_all_streaks(self):
+        """
+        By default, a habit's activities are ordered by the date on which they were performed, from most recent to
+        oldest.  This function returns all the streaks achieved in the history of this habit, that is, all the times
+        when the user managed to complete the habit at least once per required time period for more than 1 time period
+        in a row, e.g. performing a daily habit for 3 days in a row is a streak, and so is performing a weekly habit for
+        5 weeks in a row.
+        :return: A list of dictionary objects which each contain the start and end dates of a streak, as well as its
+            length.
+        """
+        streaks = []
+
+        # If we peek ahead and see that we might be observing a streak, this variable holds onto the date of the current
+        # activity as it will be the end date of the streak
+        streak_end = None
+
+        for (idx, activity) in enumerate(self.__activities__):
+            performed_at = activity.get_performed_at()
+
+            if (idx + 1) == len(self.__activities__):  # this is the last activity in the list
+                if streak_end is not None:  # we were busy observing a streak, so this activity must be the start of it
+                    streaks.append({
+                        "start": performed_at,
+                        "end": streak_end,
+                        "length": utils.get_num_days_from_to(performed_at, streak_end)
+                    })
+            else:  # we aren't at the end of the list yet
+                previous_activity = self.__activities__[idx + 1]
+                previous_performed_at = previous_activity.get_performed_at()
+                # If there is also an activity from yesterday and we aren't currently observing a streak, then note that
+                # the current activity is the ending of a streak.
+                if utils.is_same_day(previous_performed_at, performed_at - datetime.timedelta(days=1)):
+                    if streak_end is None:
+                        streak_end = performed_at
+                else:  # the current activity and the older one are either on the same day or more than a day apart
+                    # If they are not on the same day, then mark the current activity as the beginning of the streak
+                    # that we were observing.
+                    if not(utils.is_same_day(previous_performed_at, performed_at)) and streak_end is not None:
+                        streaks.append({
+                            "start": performed_at,
+                            "end": streak_end,
+                            "length": utils.get_num_days_from_to(performed_at, streak_end)
+                        })
+                        streak_end = None  # reset this variable to indicate that we are ready to observe a new streak
+
+        return streaks
+

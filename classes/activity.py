@@ -42,3 +42,6 @@ class Activity:
         self.__uuid__ = activity_tuple[0]
         self.__habit__ = activity_tuple[1]
         self.__performed_at__ = utils.to_datetime(activity_tuple[2])
+
+    def __str__(self):
+        return f"Habit {self.__habit__} performed at {self.__performed_at__}"
