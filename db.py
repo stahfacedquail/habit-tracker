@@ -113,7 +113,7 @@ def get_habit(uuid):
     cur = db_connection.cursor()
     cur.execute("SELECT * FROM habits WHERE uuid = ?", (uuid, ))
     habit = cur.fetchone()
-    cur.execute("SELECT * FROM activities WHERE habit = ? ORDER BY performed_at DESC", (uuid, ))
+    cur.execute("SELECT * FROM activities WHERE habit = ? ORDER BY performed_at ASC", (uuid, ))
     activities = cur.fetchall()
     return {
         "habit": habit,

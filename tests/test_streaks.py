@@ -9,7 +9,8 @@ class TestStreaksForDailyHabits:
         db.setup_tables()
 
     def test_many_streaks(self):
-        habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")
+        habit = Habit("Practise piano", "daily", "2023-05-24 18:15:43")
+        habit.perform("2023-05-25 16:00:12")
         habit.perform("2023-05-28 18:15:55")
         habit.perform("2023-05-29 19:13:14")
         habit.perform("2023-05-30 16:57:59")
@@ -25,13 +26,13 @@ class TestStreaksForDailyHabits:
         streaks = habit.get_all_streaks()
         assert len(streaks) == 2
         streak_1 = streaks[0]
-        assert streak_1["start"] == utils.to_datetime("2023-06-02 19:29:09")
-        assert streak_1["end"] == utils.to_datetime("2023-06-08 18:53:14")
-        assert streak_1["length"] == 7
+        assert streak_1["start"] == utils.to_datetime("2023-05-28 18:15:55")
+        assert streak_1["end"] == utils.to_datetime("2023-05-30 16:57:59")
+        assert streak_1["length"] == 3
         streak_2 = streaks[1]
-        assert streak_2["start"] == utils.to_datetime("2023-05-28 18:15:55")
-        assert streak_2["end"] == utils.to_datetime("2023-05-30 16:57:59")
-        assert streak_2["length"] == 3
+        assert streak_2["start"] == utils.to_datetime("2023-06-02 19:29:09")
+        assert streak_2["end"] == utils.to_datetime("2023-06-08 18:53:14")
+        assert streak_2["length"] == 7
 
     def test_streak_at_end_of_list(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")

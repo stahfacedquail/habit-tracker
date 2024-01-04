@@ -98,48 +98,66 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
     def get_all_streaks(self):
         """
-        By default, a habit's activities are ordered by the date on which they were performed, from most recent to
-        oldest.  This function returns all the streaks achieved in the history of this habit, that is, all the times
-        when the user managed to complete the habit at least once per required time period for more than 1 time period
-        in a row, e.g. performing a daily habit for 3 days in a row is a streak, and so is performing a weekly habit for
-        5 weeks in a row.
+        By default, a habit's activities are ordered by the date on which they were performed, from oldest to most
+        recent.  This function returns all the streaks achieved in the history of this habit, that is, all the times
+        when the user managed to complete the habit
+        (i) at least once per required time period and
+        (ii) for more than 1 time period in a row.
+        e.g. performing a daily habit for 3 consecutive days a streak, and so is performing a weekly habit for 5
+        consecutive weeks.
         :return: A list of dictionary objects which each contain the start and end dates of a streak, as well as its
             length.
         """
+        is_daily = self.__recurrence__ == "daily"
+
+        group_activities_into_intervals = utils.group_performances_per_day if is_daily else utils.group_performances_per_week
+        count_intervals_between = utils.get_num_days_from_to if is_daily else utils.get_num_weeks_from_to
+        is_next_interval = utils.is_next_day if is_daily else utils.is_next_week
+
+        activities_grouped_per_interval = group_activities_into_intervals(self)
+        for group in activities_grouped_per_interval:
+            print("Interval start:", datetime.datetime.strftime(group["interval_start"], "%Y-%m-%d %H:%M:%S"))
+            for activity in group["activities"]:
+                print(str(activity))
         streaks = []
 
         # If we peek ahead and see that we might be observing a streak, this variable holds onto the date of the current
-        # activity as it will be the end date of the streak
-        streak_end = None
+        # activity group
+        streak_start = None
 
-        for (idx, activity) in enumerate(self.__activities__):
-            performed_at = activity.get_performed_at()
+        for (idx, activity_group) in enumerate(activities_grouped_per_interval):
+            zeroed_interval_start = activity_group["interval_start"]  # the interval starts at midnight
+            first_performance_in_interval = min(activity_group["activities"], key=lambda x: x.get_performed_at())
+            last_performance_in_interval = max(activity_group["activities"], key=lambda x: x.get_performed_at())
 
-            if (idx + 1) == len(self.__activities__):  # this is the last activity in the list
-                if streak_end is not None:  # we were busy observing a streak, so this activity must be the start of it
+            # last activity group on the list; no further dates to compare to
+            if (idx + 1) == len(activities_grouped_per_interval):
+                # If we were busy observing a streak, this date must be the end of that streak
+                if streak_start is not None:
+                    streak_end = last_performance_in_interval.get_performed_at()
                     streaks.append({
-                        "start": performed_at,
+                        "start": streak_start,
                         "end": streak_end,
-                        "length": utils.get_num_days_from_to(performed_at, streak_end)
+                        "length": count_intervals_between(streak_start, streak_end)
                     })
             else:  # we aren't at the end of the list yet
-                previous_activity = self.__activities__[idx + 1]
-                previous_performed_at = previous_activity.get_performed_at()
-                # If there is also an activity from yesterday and we aren't currently observing a streak, then note that
-                # the current activity is the ending of a streak.
-                if utils.is_same_day(previous_performed_at, performed_at - datetime.timedelta(days=1)):
-                    if streak_end is None:
-                        streak_end = performed_at
-                else:  # the current activity and the older one are either on the same day or more than a day apart
-                    # If they are not on the same day, then mark the current activity as the beginning of the streak
-                    # that we were observing.
-                    if not(utils.is_same_day(previous_performed_at, performed_at)) and streak_end is not None:
+                next_activity_group = activities_grouped_per_interval[idx + 1]
+                next_active_interval_start_date = next_activity_group["interval_start"]
+                # If the next group of activities occurred directly after the current group and we are not currently
+                # observing a streak already, then note that this current activity group is the beginning of a streak.
+                if is_next_interval(zeroed_interval_start, next_active_interval_start_date):
+                    if streak_start is None:
+                        streak_start = first_performance_in_interval.get_performed_at()
+                else:
+                    # This group of activities and the next group are not on consecutive intervals, so if we there was
+                    # a streak that was running, it ends with the current group of activities.
+                    if streak_start is not None:
+                        streak_end = last_performance_in_interval.get_performed_at()
                         streaks.append({
-                            "start": performed_at,
+                            "start": streak_start,
                             "end": streak_end,
-                            "length": utils.get_num_days_from_to(performed_at, streak_end)
+                            "length": count_intervals_between(streak_start, streak_end)
                         })
-                        streak_end = None  # reset this variable to indicate that we are ready to observe a new streak
+                        streak_start = None  # reset this variable to indicate that we are ready to observe a new streak
 
         return streaks
-
