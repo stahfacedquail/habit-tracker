@@ -3,29 +3,26 @@ import data
 from utils import make_uuid
 
 # global database connection for the application
-db = None
+# TODO: Instead of a global connection, return from `connect` and pass it around?
+db_connection = None
 
 
 def connect(db_name="main.db"):
-    global db
-    db = sqlite3.connect(db_name)
+    global db_connection
+    db_connection = sqlite3.connect(db_name)
+
+
+def disconnect():
+    db_connection.close()
 
 
 def setup_tables():
-    cur = db.cursor()
+    cur = db_connection.cursor()
     # clear old data
-    cur.execute("DROP TABLE IF EXISTS recurrence_types")
-    cur.execute("DROP TABLE IF EXISTS activities")
-    cur.execute("DROP TABLE IF EXISTS habits")
+    remove_tables()
 
     # create afresh
     cur.execute("CREATE TABLE recurrence_types(type TEXT PRIMARY KEY)")
-    cur.execute("""
-        INSERT INTO recurrence_types VALUES
-            ("daily"),
-            ("weekly")
-    """)
-    db.commit()
 
     cur.execute("""
         CREATE TABLE habits(
@@ -37,10 +34,6 @@ def setup_tables():
                 REFERENCES recurrence_types (type)
         )
     """)
-    cur.executemany("""
-        INSERT INTO habits VALUES (?, ?, ?, ?)
-    """, data.predefined_habits)
-    db.commit()
 
     cur.execute("""
         CREATE TABLE activities(
@@ -51,16 +44,40 @@ def setup_tables():
                 REFERENCES habits(uuid)
         )
     """)
+
+
+def remove_tables():
+    cur = db_connection.cursor()
+    cur.execute("DROP TABLE IF EXISTS recurrence_types")
+    cur.execute("DROP TABLE IF EXISTS activities")
+    cur.execute("DROP TABLE IF EXISTS habits")
+
+
+def populate_starter_data():
+    cur = db_connection.cursor()
+
+    cur.execute("""
+            INSERT INTO recurrence_types VALUES
+                ("daily"),
+                ("weekly")
+        """)
+    db_connection.commit()
+
     cur.executemany("""
-        INSERT INTO activities VALUES(?, ?, ?)
-    """, data.predefined_activities)
-    db.commit()
+            INSERT INTO habits VALUES (?, ?, ?, ?)
+        """, data.predefined_habits)
+    db_connection.commit()
+
+    cur.executemany("""
+            INSERT INTO activities VALUES(?, ?, ?)
+        """, data.predefined_activities)
+    db_connection.commit()
 
 
 def create_habit(title, recurrence, created_at):
-    cur = db.cursor()
     uuid = make_uuid()
 
+    cur = db_connection.cursor()
     if created_at is None:
         cur.execute("""
             INSERT INTO habits(uuid, title, recurrence)
@@ -70,10 +87,36 @@ def create_habit(title, recurrence, created_at):
         cur.execute("""
             INSERT INTO habits VALUES(?, ?, ?, ?)
         """, (uuid, title, recurrence, created_at))
-    db.commit()
-    cur.execute("""SELECT * FROM habits WHERE uuid = ?""", (uuid,))
-    new_habit = cur.fetchone()
-    print("DB")
-    print(new_habit)
-    return new_habit
+    db_connection.commit()
+    return get_habit(uuid)
+
+
+def create_activity(habit_uuid, performed_at):
+    uuid = make_uuid()
+
+    cur = db_connection.cursor()
+    if performed_at is None:
+        cur.execute("""
+            INSERT INTO activities(uuid, habit) VALUES(?, ?)
+        """, (uuid, habit_uuid))
+    else:
+        cur.execute("""
+            INSERT INTO activities VALUES(?, ?, ?)
+        """, (uuid, habit_uuid, performed_at))
+    db_connection.commit()
+
+    cur.execute("SELECT * FROM activities WHERE uuid = ?", (uuid, ))
+    return cur.fetchone()
+
+
+def get_habit(uuid):
+    cur = db_connection.cursor()
+    cur.execute("SELECT * FROM habits WHERE uuid = ?", (uuid, ))
+    habit = cur.fetchone()
+    cur.execute("SELECT * FROM activities WHERE habit = ?", (uuid, ))
+    activities = cur.fetchall()
+    return {
+        "habit": habit,
+        "activities": activities,
+    }
 
