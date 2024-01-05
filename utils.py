@@ -192,12 +192,17 @@ def calculate_day_streaks(activities: list[object]):
     :return: A list of dictionary objects, where each object has the start date and end date of the streak, the length
         of the streak, and the unit of measurement for the length of the streak (i.e. days, in this case)
     """
+    # 1. Add a computed property to each activity, namely, a string with just the date (no time) when the activity
+    # was performed
     augmented_activities = list(map(
         lambda x: {
             "model": x,
             "performance_date": to_date_only_string(x.get_performed_at())
         }, activities))
 
+    # 2. This is a function to group activities that were performed on the same day.  The result will be a dictionary
+    # where each key is a date string like "2023-12-01" and the value is the list of Activity models for that date (i.e.
+    # records of the habit being performed on that day, no matter the time)
     def group_by_date(grouped, activity):
         curr_date = activity["performance_date"]
         if curr_date not in grouped:
@@ -205,16 +210,19 @@ def calculate_day_streaks(activities: list[object]):
         grouped[curr_date].append(activity["model"])
         return grouped
 
-    # A dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models
-    # for that date (i.e. records of the habit being performed on that day, no matter the time)
     dict_activities_per_day = reduce(group_by_date, augmented_activities, {})
-    active_dates = list(dict_activities_per_day.keys())
-    active_dates.sort()  # be super sure that they are sorted in ascending order
 
-    # If we peek ahead and see that we are observing a streak, this variable holds onto the date currently being
-    # looked at
+    # 3. Extract a list of the unique dates on which the habit was performed and make sure it's sorted in ascending
+    # order.
+    active_dates = list(dict_activities_per_day.keys())
+    active_dates.sort()
+
+    # 4. Now for the business of computing the streaks.
+    # `streak_start`: If we peek ahead and see that we are observing a streak, this variable will hold onto the date
+    # currently being looked at
     streak_start = None
-    # Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04")
+    # `streaks`: Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04"), indicating when a
+    # streak started and ended
     streaks = []
     for (idx, dt_string) in enumerate(active_dates):
         if (idx + 1) < len(active_dates):  # there is another date after this one
@@ -234,28 +242,28 @@ def calculate_day_streaks(activities: list[object]):
             if streak_start is not None:
                 streaks.append((streak_start, dt_string))
 
-    def get_first_activity(activities_list: list[object]):
-        activities_list.sort(key=lambda activity: activity.get_performed_at())
-        return activities_list[0]
-
-    def get_last_activity(activities_list: list[object]):
-        activities_list.sort(key=lambda activity: activity.get_performed_at())
-        return activities_list[-1]
-
-    def get_streak_accurate_params(start_date: str, end_date: str):
-        activities_on_start_date = dict_activities_per_day[start_date]
-        accurate_start = get_first_activity(activities_on_start_date).get_performed_at()
-        activities_on_end_date = dict_activities_per_day[end_date]
-        accurate_end = get_last_activity(activities_on_end_date).get_performed_at()
-        streak_length = get_num_days_from_to(accurate_start, accurate_end)
-        return {
-            "start": accurate_start,
-            "end": accurate_end,
-            "length": streak_length,
-            "unit": "days"
-        }
-
     return list(map(
         lambda streak: get_streak_accurate_params(streak[0], streak[1]),
         streaks
     ))
+
+
+def get_streak_accurate_params(start_date_activities: str, end_date_activities: str, habit_recurrence: str):
+    def get_first_activity(activities: list[object]):
+        activities.sort(key=lambda activity: activity.get_performed_at())
+        return activities[0]
+
+    def get_last_activity(activities: list[object]):
+        activities.sort(key=lambda activity: activity.get_performed_at())
+        return activities[-1]
+
+    accurate_start = get_first_activity(start_date_activities).get_performed_at()
+    accurate_end = get_last_activity(end_date_activities).get_performed_at()
+    streak_length = get_num_days_from_to(accurate_start, accurate_end) if habit_recurrence == "daily"\
+        else get_num_weeks_from_to(accurate_start, accurate_end)
+    return {
+        "start": accurate_start,
+        "end": accurate_end,
+        "length": streak_length,
+        "unit": "days"
+    }
