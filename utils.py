@@ -22,7 +22,7 @@ def to_datetime(datetime_str):
     return datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
 
 
-def to_date_string(dt: datetime):
+def to_date_only_string(dt: datetime):
     """
     Get a date-only string from `dt`, a datetime object.
     """
@@ -159,7 +159,7 @@ def group_performances_per_day(habit):
     all_activities = list(map(
         lambda x: {
             "model": x,
-            "performance_date": to_date_string(x.get_performed_at())
+            "performance_date": to_date_only_string(x.get_performed_at())
         }, habit.get_activities()))
 
     def group_by_date(grouped, activity):
@@ -184,3 +184,78 @@ def group_performances_per_day(habit):
 
     return list_activities_per_day
 
+
+def calculate_day_streaks(activities: list[object]):
+    """
+    Determine the date ranges for which activities were recorded for 2 or more consecutive days.
+    :param activities: A list of Activity models
+    :return: A list of dictionary objects, where each object has the start date and end date of the streak, the length
+        of the streak, and the unit of measurement for the length of the streak (i.e. days, in this case)
+    """
+    augmented_activities = list(map(
+        lambda x: {
+            "model": x,
+            "performance_date": to_date_only_string(x.get_performed_at())
+        }, activities))
+
+    def group_by_date(grouped, activity):
+        curr_date = activity["performance_date"]
+        if curr_date not in grouped:
+            grouped[curr_date] = []
+        grouped[curr_date].append(activity["model"])
+        return grouped
+
+    # A dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models
+    # for that date (i.e. records of the habit being performed on that day, no matter the time)
+    dict_activities_per_day = reduce(group_by_date, augmented_activities, {})
+    active_dates = list(dict_activities_per_day.keys())
+    active_dates.sort()  # be super sure that they are sorted in ascending order
+
+    # If we peek ahead and see that we are observing a streak, this variable holds onto the date currently being
+    # looked at
+    streak_start = None
+    # Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04")
+    streaks = []
+    for (idx, dt_string) in enumerate(active_dates):
+        if (idx + 1) < len(active_dates):  # there is another date after this one
+            curr_dt = to_datetime(f"{dt_string} 00:00:00")
+            next_dt = to_datetime(f"{active_dates[idx + 1]} 00:00:00")
+            if is_next_day(curr_dt, next_dt):
+                # If we weren't already busy observing a streak, note that we are now observing a streak
+                if streak_start is None:
+                    streak_start = dt_string
+            # If we were busy observing a streak...
+            elif streak_start is not None:
+                # ... that streak is now terminated
+                streaks.append((streak_start, dt_string))
+                streak_start = None  # reset variable to indicate that we are ready to observe a new streak
+        else:  # This is the last date on the list; no further dates to compare to
+            # so if we were busy observing a streak, this date terminates the streak.
+            if streak_start is not None:
+                streaks.append((streak_start, dt_string))
+
+    def get_first_activity(activities_list: list[object]):
+        activities_list.sort(key=lambda activity: activity.get_performed_at())
+        return activities_list[0]
+
+    def get_last_activity(activities_list: list[object]):
+        activities_list.sort(key=lambda activity: activity.get_performed_at())
+        return activities_list[-1]
+
+    def get_streak_accurate_params(start_date: str, end_date: str):
+        activities_on_start_date = dict_activities_per_day[start_date]
+        accurate_start = get_first_activity(activities_on_start_date).get_performed_at()
+        activities_on_end_date = dict_activities_per_day[end_date]
+        accurate_end = get_last_activity(activities_on_end_date).get_performed_at()
+        streak_length = get_num_days_from_to(accurate_start, accurate_end)
+        return {
+            "start": accurate_start,
+            "end": accurate_end,
+            "length": streak_length,
+            "unit": "days"
+        }
+
+    return list(map(
+        lambda streak: get_streak_accurate_params(streak[0], streak[1]),
+        streaks
+    ))

@@ -110,6 +110,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         """
         is_daily = self.__recurrence__ == "daily"
 
+        if is_daily:
+            return utils.calculate_day_streaks(self.__activities__)
+
         group_activities_by_intervals = utils.group_performances_per_day if is_daily else utils.group_performances_per_week
         count_intervals_between = utils.get_num_days_from_to if is_daily else utils.get_num_weeks_from_to
         is_next_interval = utils.is_next_day if is_daily else utils.is_next_week
