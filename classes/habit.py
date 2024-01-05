@@ -117,24 +117,26 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         activities_grouped_per_interval = group_activities_by_intervals(self)
         streaks = []
 
-        # If we peek ahead and see that we are observing a streak, this variable holds onto the date of the current
-        # activity group
+        # If we peek ahead and see that we are observing a streak, this variable holds onto the current activity group
+        # (which contains the dates for the start of the streak)
         streak_start = None
 
         for (idx, activity_group) in enumerate(activities_grouped_per_interval):
             zeroed_interval_start = activity_group["interval_start"]  # the interval starts at midnight
-            first_performance_in_interval = min(activity_group["activities"], key=lambda x: x.get_performed_at())
             last_performance_in_interval = max(activity_group["activities"], key=lambda x: x.get_performed_at())
 
             # last activity group on the list; no further dates to compare to
             if (idx + 1) == len(activities_grouped_per_interval):
                 # If we were busy observing a streak, this date must be the end of that streak
                 if streak_start is not None:
-                    streak_end = last_performance_in_interval.get_performed_at()
+                    actual_start = min(streak_start["activities"], key=lambda x: x.get_performed_at()).get_performed_at()
+                    zeroed_start = streak_start["interval_start"]
+                    actual_end = last_performance_in_interval.get_performed_at()
+                    zeroed_end = activity_group["interval_start"]
                     streaks.append({
-                        "start": streak_start,
-                        "end": streak_end,
-                        "length": count_intervals_between(streak_start, streak_end)
+                        "start": actual_start,
+                        "end": actual_end,
+                        "length": count_intervals_between(zeroed_start, zeroed_end)
                     })
             else:  # we aren't at the end of the list yet
                 next_activity_group = activities_grouped_per_interval[idx + 1]
@@ -143,16 +145,19 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 # observing a streak already, then note that this current activity group is the beginning of a streak.
                 if is_next_interval(zeroed_interval_start, next_active_interval_start_date):
                     if streak_start is None:
-                        streak_start = first_performance_in_interval.get_performed_at()
+                        streak_start = activity_group
                 else:
                     # This group of activities and the next group are not on consecutive intervals, so if we there was
                     # a streak that was running, it ends with the current group of activities.
                     if streak_start is not None:
-                        streak_end = last_performance_in_interval.get_performed_at()
+                        actual_start = min(streak_start["activities"], key=lambda x: x.get_performed_at()).get_performed_at()
+                        zeroed_start = streak_start["interval_start"]
+                        actual_end = last_performance_in_interval.get_performed_at()
+                        zeroed_end = activity_group["interval_start"]
                         streaks.append({
-                            "start": streak_start,
-                            "end": streak_end,
-                            "length": count_intervals_between(streak_start, streak_end)
+                            "start": actual_start,
+                            "end": actual_end,
+                            "length": count_intervals_between(zeroed_start, zeroed_end)
                         })
                         streak_start = None  # reset this variable to indicate that we are ready to observe a new streak
 

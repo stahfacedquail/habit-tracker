@@ -23,7 +23,7 @@ def get_num_days_from_to(start_date: datetime, end_date: datetime):
 def get_num_weeks_from_to(start_of_begin_week: datetime, start_of_end_week: datetime):
     start_date_ignoring_time = strip_out_time(start_of_begin_week)
     end_date_ignoring_time = strip_out_time(start_of_end_week)
-    return (end_date_ignoring_time - start_date_ignoring_time)/7 + 1
+    return (end_date_ignoring_time - start_date_ignoring_time).days/7 + 1
 
 
 def is_next_day(date_a: datetime, date_b: datetime):
@@ -42,7 +42,7 @@ def get_week_start_days(start_date: datetime, end_date: datetime):
     week_starts = []
     date_cursor = strip_out_time(start_date)  # so that week is counted as starting from 00:00 on whatever provided date
     while date_cursor <= end_date:
-        week_starts.push(date_cursor)
+        week_starts.append(date_cursor)
         date_cursor += timedelta(days=7)
 
     return week_starts
@@ -60,20 +60,20 @@ def group_performances_per_week(habit):
     # First week starts the day the habit was created
     date_habit_created = habit.get_created_at()
     # Last week is the one containing the last time the habit was performed (most recent performance)
-    most_recent_performance = habit.get_activities()[0]
+    most_recent_performance = habit.get_activities()[-1]
     most_recent_performance_date = most_recent_performance.get_performed_at()
 
     week_starts = get_week_start_days(date_habit_created, most_recent_performance_date)
 
-    activities_per_week = map(lambda x: {
+    activities_per_week = list(map(lambda x: {
         "interval_start": x,
         "activities": None,
-    }, week_starts)
+    }, week_starts))
 
     for (idx, week_start) in enumerate(week_starts):
         week_activity_list = activities_per_week[idx]
 
-        def bounded_date_range(x): return week_start <= x.get_performed_at() < week_start[idx + 1]
+        def bounded_date_range(x): return week_start <= x.get_performed_at() < week_starts[idx + 1]
         def open_date_range(x): return x.get_performed_at() >= week_start
 
         week_activity_list["activities"] = list(filter(
@@ -85,9 +85,12 @@ def group_performances_per_week(habit):
             habit.get_activities()
         ))
 
-    return list(filter(
+    activities_for_active_weeks_only = list(filter(
         lambda x: len(x["activities"]) > 0, activities_per_week
-    )).sort(lambda y: y["interval_start"])
+    ))
+    activities_for_active_weeks_only.sort(key=lambda y: y["interval_start"])
+
+    return activities_for_active_weeks_only
 
 
 def group_performances_per_day(habit):

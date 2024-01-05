@@ -37,14 +37,14 @@ class TestStreaksForDailyHabits:
     def test_streak_at_end_of_list(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")
         habit.perform("2023-06-17 16:48:06")
-        habit.perform("2023-06-18 18:59:43")
+        habit.perform("2023-06-21 18:59:43")
         habit.perform("2023-06-22 20:22:13")
 
         streaks = habit.get_all_streaks()
         assert len(streaks) == 1
         streak = streaks[0]
-        assert streak["start"] == utils.to_datetime("2023-06-17 16:48:06")
-        assert streak["end"] == utils.to_datetime("2023-06-18 18:59:43")
+        assert streak["start"] == utils.to_datetime("2023-06-21 18:59:43")
+        assert streak["end"] == utils.to_datetime("2023-06-22 20:22:13")
         assert streak["length"] == 2
 
     def test_streak_with_multiple_performances_per_day(self):
@@ -88,10 +88,80 @@ class TestStreaksForWeeklyHabits:
         db.connect("test.db")
         db.setup_tables()
 
-    # 1. test streak at the end of the list
-    # 2. test streak when multiple performances per week
-    # 3. test more than one streak in list
+    def test_streak_at_end_of_list(self):
+        habit = Habit("Phone parents", "weekly", "2023-12-05 18:51:24")
+        habit.perform("2023-12-06 16:59:44")
+        habit.perform("2023-12-27 16:46:09")
+        habit.perform("2024-01-02 19:16:37")
+        habit.perform("2024-01-10 20:10:43")
+        habit.perform("2024-01-21 19:22:15")
+
+        streaks = habit.get_all_streaks()
+        assert len(streaks) == 1
+        streak1 = streaks[0]
+        assert streak1["start"] == utils.to_datetime("2023-12-27 16:46:09")
+        assert streak1["end"] == utils.to_datetime("2024-01-21 19:22:15")
+        assert streak1["length"] == 4
+
+    # 2. test more than one streak in list
+    def test_multiple_streaks(self):
+        habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
+        habit.perform("2023-09-18 16:20:30")
+        habit.perform("2023-09-21 16:42:11")
+        habit.perform("2023-09-28 21:30:31")
+        habit.perform("2023-10-22 20:30:47")
+        habit.perform("2023-11-03 20:57:17")
+        habit.perform("2023-11-20 18:11:06")
+        habit.perform("2023-11-24 19:06:56")
+        habit.perform("2023-12-05 20:51:22")
+        habit.perform("2023-12-09 20:47:20")
+        habit.perform("2024-01-06 17:39:39")
+        habit.perform("2024-01-11 16:15:50")
+
+        streaks = habit.get_all_streaks()
+        assert len(streaks) == 3
+
+        streak_1 = streaks[0]
+        streak_2 = streaks[1]
+        streak_3 = streaks[2]
+        assert streak_1["start"] == utils.to_datetime("2023-09-18 16:20:30")
+        assert streak_1["end"] == utils.to_datetime("2023-09-28 21:30:31")
+        assert streak_1["length"] == 3
+        assert streak_2["start"] == utils.to_datetime("2023-11-20 18:11:06")
+        assert streak_2["end"] == utils.to_datetime("2023-12-09 20:47:20")
+        assert streak_2["length"] == 4
+        assert streak_3["start"] == utils.to_datetime("2024-01-06 17:39:39")
+        assert streak_3["end"] == utils.to_datetime("2024-01-11 16:15:50")
+        assert streak_3["length"] == 2
+
+    # 3. test streak when multiple performances per week
+    def test_multiple_performances_per_week(self):
+        habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
+        habit.perform("2023-09-18 16:20:30")
+        habit.perform("2023-09-21 16:42:11")
+        habit.perform("2023-09-21 21:30:31")
+        habit.perform("2023-09-23 20:30:47")
+        habit.perform("2023-09-27 05:16:00")
+        habit.perform("2023-09-27 13:00:01")
+        habit.perform("2023-09-27 20:57:17")
+
+        streaks = habit.get_all_streaks()
+        assert len(streaks) == 1
+
+        streak_1 = streaks[0]
+        assert streak_1["start"] == utils.to_datetime("2023-09-18 16:20:30")
+        assert streak_1["end"] == utils.to_datetime("2023-09-27 20:57:17")
+        assert streak_1["length"] == 2
+
     # 4. test no streaks
+    def test_no_streaks(self):
+        habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
+        habit.perform("2023-09-16 19:44:47")
+        habit.perform("2023-09-29 19:43:34")
+        habit.perform("2023-10-30 20:09:22")
+
+        streaks = habit.get_all_streaks()
+        assert len(streaks) == 0
 
     def teardown_method(self):
         db.remove_tables()
