@@ -110,14 +110,20 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         augmented_activities = list(map(
             lambda x: {
                 "model": x,
-                "performance_date": utils.to_date_only_string(x.get_performed_at())
+                "performance_period": utils.to_date_only_string(
+                    x.get_performed_at() if self.__recurrence__ == "daily"
+                    else x.get_performed_at() - datetime.timedelta(days=x.get_performed_at().weekday())
+                )
             }, self.__activities__))
+
+        for a in augmented_activities:
+            print(a["performance_period"])
 
         # 2. This is a function to group activities that were performed on the same day.  The result will be a
         # dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models for
         # that date (i.e. records of the habit being performed on that day, no matter the time)
         def group_by_date(grouped, activity):
-            curr_date = activity["performance_date"]
+            curr_date = activity["performance_period"]
             if curr_date not in grouped:
                 grouped[curr_date] = []
             grouped[curr_date].append(activity["model"])
@@ -152,12 +158,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                     streak_start = curr_dt  # so maybe this is the beginning of one; who knows!
                     streak_length = 1
 
-                days_to_next_date = utils.get_num_days_from_to(streak_start, next_dt)
-                if days_to_next_date <= interval:
-                    # still in same day/week, so don't increment streak length
-                    continue
-                elif days_to_next_date <= (streak_length + 1) * interval:
-                    # is within the nth-following day/week, so increment streak length
+                days_to_next_date = utils.get_num_days_from_to(streak_start, next_dt, False)
+                if days_to_next_date == streak_length * interval:
+                    # matches the expected days to get to the nth-following day/week, so increment streak length
                     streak_length += 1
                 else:  # next date is beyond the nth-following day/week
                     if streak_length > 1:  # and we were busy observing a streak, so this terminates it

@@ -91,6 +91,17 @@ class TestStreaksForWeeklyHabits:
         db.setup_tables()
 
     def test_streak_at_end_of_list(self):
+        # Calendar:
+        # DECEMBER
+        #   Mo      Tu      We      Th      Fr      Sa      Su
+        #                  (06)     07      08      09      10  [*]
+        #   11      12      13      14      15      16      17   -
+        #   18      19      20      21      22      23      24   -
+        #   25      26     (27)     28      29      30      31  [*]
+        # JANUARY
+        #   01     (02)     03      04      05      06      07  [*]
+        #   08      09     (10)     11      12      13      14  [*]
+        #   15      16      17      18      19      20     (21) [*]
         habit = Habit("Phone parents", "weekly", "2023-12-05 18:51:24")
         habit.perform("2023-12-06 16:59:44")
         habit.perform("2023-12-27 16:46:09")
@@ -101,13 +112,49 @@ class TestStreaksForWeeklyHabits:
         streaks = habit.get_all_streaks()
         assert len(streaks) == 1
         streak_1 = streaks[0]
-        assert streak_1["start"] == utils.to_datetime("2024-01-10 20:10:43")
+        assert streak_1["start"] == utils.to_datetime("2023-12-27 16:46:09")
         assert streak_1["end"] == utils.to_datetime("2024-01-21 19:22:15")
-        assert streak_1["length"] == 2
+        assert streak_1["length"] == 4
         assert streak_1["unit"] == "weeks"
 
     # 2. test more than one streak in list
     def test_multiple_streaks(self):
+        # Calendar:
+        # SEPTEMBER
+        #   Mo      Tu      We      Th      Fr      Sa      Su
+        #  (18)     19      20     (21)     22      23      24      [*]
+        #   25      26      27     (28)     29      30      --  |
+        # OCTOBER                                               |   [*] one week
+        #   --      --      --      --      --      --      01  |
+        #   02      03      04      05      06      07      08       -
+        #   09      10      11      12      13      14      15       -
+        #   16      17      18      19      20      21     (22)     [*]
+        #   23      24      25      26      27      28      29       -
+        #   30      31      --      --      --      --      --  |
+        # NOVEMBER                                              |   [*] one week
+        #   --      --      01      02     (03)     04      05  |
+        #   06      07      08      09      10      11      12       -
+        #   13      14      15      16      17      18      19       -
+        #  (20)     21      22      23     (24)     25      26      [*]
+        #   27      28      29      30      --      --      --  |
+        # DECEMBER                                              |    - one week
+        #   --      --      --      --      01      02      03  |
+        #   04     (05)     06      07      08     (09)     10      [*]
+        #   11      12      13      14      15      16      17       -
+        #   18      19      20      21      22      23      24       -
+        #   25      26      27      28      29      30      31       -
+        # JANUARY
+        #   01      02      03      04      05     (06)     07      [*]
+        #   08      09      10      11      12     (13)     14      [*]
+        #   15      16      17      18      19     (20)     21      [*]
+        #   22      23      24      25      26      27      28       -
+        #   29      30     (31)     --      --      --      --  |
+        # FEBRUARY                                              |   [*] one week
+        #   --      --      --      01      02      03      04  |
+        #   05      06      07      08      09      10      11       -
+        #   12      13      14      15      16      17      18       -
+        #   19      20      21      22      23      24      25       -
+        #   26      27     (28)                                     [*]
         habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
         habit.perform("2023-09-18 16:20:30")
         habit.perform("2023-09-21 16:42:11")
@@ -125,23 +172,24 @@ class TestStreaksForWeeklyHabits:
         habit.perform("2024-02-28 17:17:45")
 
         streaks = habit.get_all_streaks()
-        assert len(streaks) == 3
+        assert len(streaks) == 2
 
         streak_1 = streaks[0]
         streak_2 = streaks[1]
-        streak_3 = streaks[2]
         assert streak_1["start"] == utils.to_datetime("2023-09-18 16:20:30")
         assert streak_1["end"] == utils.to_datetime("2023-09-28 21:30:31")
         assert streak_1["length"] == 2
-        assert streak_2["start"] == utils.to_datetime("2023-10-22 20:30:47")
-        assert streak_2["end"] == utils.to_datetime("2023-11-03 20:57:17")
-        assert streak_2["length"] == 2
-        assert streak_3["start"] == utils.to_datetime("2024-01-06 17:39:39")
-        assert streak_3["end"] == utils.to_datetime("2024-01-31 19:23:37")
-        assert streak_3["length"] == 4
+        assert streak_2["start"] == utils.to_datetime("2024-01-06 17:39:39")
+        assert streak_2["end"] == utils.to_datetime("2024-01-20 21:42:03")
+        assert streak_2["length"] == 3
 
     # 3. test streak when multiple performances per week
     def test_multiple_performances_per_week(self):
+        # Calendar:
+        # SEPTEMBER
+        #   Mo      Tu      We      Th      Fr      Sa      Su
+        #  (18)     19      20    ((21))    22     (23)     24      [*]
+        #   25      26   (((27)))   28      29      30              [*]
         habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
         habit.perform("2023-09-18 16:20:30")
         habit.perform("2023-09-21 16:42:11")
@@ -161,6 +209,19 @@ class TestStreaksForWeeklyHabits:
 
     # 4. test no streaks
     def test_no_streaks(self):
+        # Calendar:
+        # SEPTEMBER
+        #   Mo      Tu      We      Th      Fr      Sa      Su
+        #   11      12      13      14      15     (16)     17      [*]
+        #   18      19      20      21      22      23      24       -
+        #   25      26      27      28      29      30      --  |
+        # OCTOBER                                               |   [*] one week
+        #   --      --      --      --      --      --     (01) |
+        #   02      03      04      05      06      07      08       -
+        #   09      10      11      12      13      14      15       -
+        #   16      17      18      19      20      21      22       -
+        #   23      24      25      26      27      28      29       -
+        #  (30)     31      --      --      --      --      --      [*]
         habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
         habit.perform("2023-09-16 19:44:47")
         habit.perform("2023-10-01 19:43:34")
