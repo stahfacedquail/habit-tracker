@@ -29,10 +29,12 @@ class TestStreaksForDailyHabits:
         assert streak_1["start"] == utils.to_datetime("2023-05-28 18:15:55")
         assert streak_1["end"] == utils.to_datetime("2023-05-30 16:57:59")
         assert streak_1["length"] == 3
+        assert streak_1["unit"] == "days"
         streak_2 = streaks[1]
         assert streak_2["start"] == utils.to_datetime("2023-06-02 19:29:09")
         assert streak_2["end"] == utils.to_datetime("2023-06-08 18:53:14")
         assert streak_2["length"] == 7
+        assert streak_2["unit"] == "days"
 
     def test_streak_at_end_of_list(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")
@@ -98,10 +100,11 @@ class TestStreaksForWeeklyHabits:
 
         streaks = habit.get_all_streaks()
         assert len(streaks) == 1
-        streak1 = streaks[0]
-        assert streak1["start"] == utils.to_datetime("2023-12-27 16:46:09")
-        assert streak1["end"] == utils.to_datetime("2024-01-21 19:22:15")
-        assert streak1["length"] == 4
+        streak_1 = streaks[0]
+        assert streak_1["start"] == utils.to_datetime("2024-01-10 20:10:43")
+        assert streak_1["end"] == utils.to_datetime("2024-01-21 19:22:15")
+        assert streak_1["length"] == 2
+        assert streak_1["unit"] == "weeks"
 
     # 2. test more than one streak in list
     def test_multiple_streaks(self):
@@ -116,7 +119,10 @@ class TestStreaksForWeeklyHabits:
         habit.perform("2023-12-05 20:51:22")
         habit.perform("2023-12-09 20:47:20")
         habit.perform("2024-01-06 17:39:39")
-        habit.perform("2024-01-11 16:15:50")
+        habit.perform("2024-01-13 16:15:50")
+        habit.perform("2024-01-20 21:42:03")
+        habit.perform("2024-01-31 19:23:37")
+        habit.perform("2024-02-28 17:17:45")
 
         streaks = habit.get_all_streaks()
         assert len(streaks) == 3
@@ -126,13 +132,13 @@ class TestStreaksForWeeklyHabits:
         streak_3 = streaks[2]
         assert streak_1["start"] == utils.to_datetime("2023-09-18 16:20:30")
         assert streak_1["end"] == utils.to_datetime("2023-09-28 21:30:31")
-        assert streak_1["length"] == 3
-        assert streak_2["start"] == utils.to_datetime("2023-11-20 18:11:06")
-        assert streak_2["end"] == utils.to_datetime("2023-12-09 20:47:20")
-        assert streak_2["length"] == 4
+        assert streak_1["length"] == 2
+        assert streak_2["start"] == utils.to_datetime("2023-10-22 20:30:47")
+        assert streak_2["end"] == utils.to_datetime("2023-11-03 20:57:17")
+        assert streak_2["length"] == 2
         assert streak_3["start"] == utils.to_datetime("2024-01-06 17:39:39")
-        assert streak_3["end"] == utils.to_datetime("2024-01-11 16:15:50")
-        assert streak_3["length"] == 2
+        assert streak_3["end"] == utils.to_datetime("2024-01-31 19:23:37")
+        assert streak_3["length"] == 4
 
     # 3. test streak when multiple performances per week
     def test_multiple_performances_per_week(self):
@@ -157,7 +163,7 @@ class TestStreaksForWeeklyHabits:
     def test_no_streaks(self):
         habit = Habit("Phone parents", "weekly", "2023-09-14 19:01:16")
         habit.perform("2023-09-16 19:44:47")
-        habit.perform("2023-09-29 19:43:34")
+        habit.perform("2023-10-01 19:43:34")
         habit.perform("2023-10-30 20:09:22")
 
         streaks = habit.get_all_streaks()

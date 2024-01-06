@@ -3,6 +3,7 @@ import datetime
 from db import create_habit, get_habit
 from multimethod import multimethod
 from typing import Union, Optional
+from functools import reduce
 import utils
 from classes.activity import Activity
 
@@ -99,69 +100,102 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
     def get_all_streaks(self):
         """
         By default, a habit's activities are ordered by the date on which they were performed, from oldest to most
-        recent.  This function returns all the streaks achieved in the history of this habit, that is, all the times
-        when the user managed to complete the habit
-        (i) at least once per required time period and
-        (ii) for more than 1 time period in a row.
-        e.g. performing a daily habit for 3 consecutive days a streak, and so is performing a weekly habit for 5
-        consecutive weeks.
-        :return: A list of dictionary objects which each contain the start and end dates of a streak, as well as its
-            length.
+        recent.  Determine the date ranges for which activities were recorded for 2 or more consecutive periods
+        (days/weeks).
+        :return: A list of dictionary objects, where each object has the start date and end date of the streak,
+            the length of the streak, and the unit of measurement for the length of the streak (i.e. "days" or "weeks")
         """
-        is_daily = self.__recurrence__ == "daily"
+        # 1. Add a computed property to each activity, namely, a string with just the date (no time) when the activity
+        # was performed
+        augmented_activities = list(map(
+            lambda x: {
+                "model": x,
+                "performance_date": utils.to_date_only_string(x.get_performed_at())
+            }, self.__activities__))
 
-        if is_daily:
-            return utils.calculate_day_streaks(self.__activities__)
+        # 2. This is a function to group activities that were performed on the same day.  The result will be a
+        # dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models for
+        # that date (i.e. records of the habit being performed on that day, no matter the time)
+        def group_by_date(grouped, activity):
+            curr_date = activity["performance_date"]
+            if curr_date not in grouped:
+                grouped[curr_date] = []
+            grouped[curr_date].append(activity["model"])
+            return grouped
 
-        group_activities_by_intervals = utils.group_performances_per_day if is_daily else utils.group_performances_per_week
-        count_intervals_between = utils.get_num_days_from_to if is_daily else utils.get_num_weeks_from_to
-        is_next_interval = utils.is_next_day if is_daily else utils.is_next_week
+        dict_activities_per_day = reduce(group_by_date, augmented_activities, {})
 
-        activities_grouped_per_interval = group_activities_by_intervals(self)
+        # 3. Extract a list of the unique dates on which the habit was performed and make sure it's sorted in ascending
+        # order.
+        active_dates = list(dict_activities_per_day.keys())
+        active_dates.sort()
+
+        # 4. Now for the business of computing the streaks.
+        # `streaks`: Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04"), indicating when a
+        # streak started and ended
         streaks = []
-
-        # If we peek ahead and see that we are observing a streak, this variable holds onto the current activity group
-        # (which contains the dates for the start of the streak)
+        # `streak_start`: If we peek ahead and see that we are observing a streak, this variable will hold onto the date
+        # currently being looked at
         streak_start = None
+        # `streak_length` keeps count of how many unique periods (days/weeks) make up the streak
+        streak_length = 0
+        # `interval` is the number of days that make up the recurrence period
+        interval = 1 if self.__recurrence__ == "daily" else 7
 
-        for (idx, activity_group) in enumerate(activities_grouped_per_interval):
-            zeroed_interval_start = activity_group["interval_start"]  # the interval starts at midnight
-            last_performance_in_interval = max(activity_group["activities"], key=lambda x: x.get_performed_at())
+        for (idx, dt_string) in enumerate(active_dates):
+            curr_dt = utils.to_datetime(f"{dt_string} 00:00:00")
 
-            # last activity group on the list; no further dates to compare to
-            if (idx + 1) == len(activities_grouped_per_interval):
-                # If we were busy observing a streak, this date must be the end of that streak
-                if streak_start is not None:
-                    actual_start = min(streak_start["activities"], key=lambda x: x.get_performed_at()).get_performed_at()
-                    zeroed_start = streak_start["interval_start"]
-                    actual_end = last_performance_in_interval.get_performed_at()
-                    zeroed_end = activity_group["interval_start"]
-                    streaks.append({
-                        "start": actual_start,
-                        "end": actual_end,
-                        "length": count_intervals_between(zeroed_start, zeroed_end)
-                    })
-            else:  # we aren't at the end of the list yet
-                next_activity_group = activities_grouped_per_interval[idx + 1]
-                next_active_interval_start_date = next_activity_group["interval_start"]
-                # If the next group of activities occurred directly after the current group and we are not currently
-                # observing a streak already, then note that this current activity group is the beginning of a streak.
-                if is_next_interval(zeroed_interval_start, next_active_interval_start_date):
-                    if streak_start is None:
-                        streak_start = activity_group
-                else:
-                    # This group of activities and the next group are not on consecutive intervals, so if we there was
-                    # a streak that was running, it ends with the current group of activities.
-                    if streak_start is not None:
-                        actual_start = min(streak_start["activities"], key=lambda x: x.get_performed_at()).get_performed_at()
-                        zeroed_start = streak_start["interval_start"]
-                        actual_end = last_performance_in_interval.get_performed_at()
-                        zeroed_end = activity_group["interval_start"]
-                        streaks.append({
-                            "start": actual_start,
-                            "end": actual_end,
-                            "length": count_intervals_between(zeroed_start, zeroed_end)
-                        })
-                        streak_start = None  # reset this variable to indicate that we are ready to observe a new streak
+            if (idx + 1) < len(active_dates):  # there is another date after this one
+                next_dt = utils.to_datetime(f"{active_dates[idx + 1]} 00:00:00")
 
-        return streaks
+                if streak_start is None:  # we are not busy observing a streak
+                    streak_start = curr_dt  # so maybe this is the beginning of one; who knows!
+                    streak_length = 1
+
+                days_to_next_date = utils.get_num_days_from_to(streak_start, next_dt)
+                if days_to_next_date <= interval:
+                    # still in same day/week, so don't increment streak length
+                    continue
+                elif days_to_next_date <= (streak_length + 1) * interval:
+                    # is within the nth-following day/week, so increment streak length
+                    streak_length += 1
+                else:  # next date is beyond the nth-following day/week
+                    if streak_length > 1:  # and we were busy observing a streak, so this terminates it
+                        streaks.append((utils.to_date_only_string(streak_start), dt_string))
+
+                    # reset to indicate we are ready to observe a new streak
+                    streak_start = None
+                    streak_length = 0
+            else:  # no dates left to compare to
+                # if we were busy observing a streak, this terminates it
+                if streak_length > 1:
+                    streaks.append((utils.to_date_only_string(streak_start), dt_string))
+
+        def get_streak_accurate_params(start_date_activities: str, end_date_activities: str, habit_recurrence: str):
+            def get_first_activity(activities: list[object]):
+                activities.sort(key=lambda activity: activity.get_performed_at())
+                return activities[0]
+
+            def get_last_activity(activities: list[object]):
+                activities.sort(key=lambda activity: activity.get_performed_at())
+                return activities[-1]
+
+            accurate_start = get_first_activity(start_date_activities).get_performed_at()
+            accurate_end = get_last_activity(end_date_activities).get_performed_at()
+            length = utils.get_num_days_from_to(accurate_start, accurate_end) if habit_recurrence == "daily" \
+                else utils.get_num_weeks_from_to(accurate_start, accurate_end)
+            return {
+                "start": accurate_start,
+                "end": accurate_end,
+                "length": length,
+                "unit": "days" if habit_recurrence == "daily" else "weeks"
+            }
+
+        return list(map(
+            lambda streak: get_streak_accurate_params(
+                dict_activities_per_day[streak[0]],
+                dict_activities_per_day[streak[1]],
+                self.__recurrence__
+            ),
+            streaks
+        ))
