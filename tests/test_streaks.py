@@ -85,6 +85,7 @@ class TestStreaksForDailyHabits:
         db.remove_tables()
         db.disconnect()
 
+
 class TestStreaksForWeeklyHabits:
     def setup_method(self):
         db.connect("test.db")
