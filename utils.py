@@ -67,4 +67,4 @@ def get_week_start_date(date_a: datetime):
     :param date_a: e.g. 12 December 2023 (is on a Tuesday)
     :return: 11 December 2023 (the Monday that begins the week containing 12 December 2023)
     """
-    return date_a - timedelta(date_a.weekday())
+    return strip_out_time(date_a) - timedelta(date_a.weekday())
