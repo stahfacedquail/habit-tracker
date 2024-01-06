@@ -60,3 +60,11 @@ def get_num_weeks_from_to(date_a: datetime, date_b: datetime):
     monday_for_end_date = strip_out_time(date_b - timedelta(days=date_b.weekday()))
     return floor((monday_for_end_date - monday_for_start_date).days/7) + 1
 
+
+def get_week_start_date(date_a: datetime):
+    """
+    Given `date_a`, return the date of the Monday that begins the week containing `date_a`.
+    :param date_a: e.g. 12 December 2023 (is on a Tuesday)
+    :return: 11 December 2023 (the Monday that begins the week containing 12 December 2023)
+    """
+    return date_a - timedelta(date_a.weekday())

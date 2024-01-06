@@ -106,13 +106,13 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             the length of the streak, and the unit of measurement for the length of the streak (i.e. "days" or "weeks")
         """
         # 1. Add a computed property to each activity, namely, a string with just the date (no time) when the activity
-        # was performed
+        # was performed (daily habits) or the date of the Monday of the week when it was performed (weekly habits)
         augmented_activities = list(map(
             lambda x: {
                 "model": x,
                 "performance_period": utils.to_date_only_string(
                     x.get_performed_at() if self.__recurrence__ == "daily"
-                    else x.get_performed_at() - datetime.timedelta(days=x.get_performed_at().weekday())
+                    else utils.get_week_start_date(x.get_performed_at())
                 )
             }, self.__activities__))
 
@@ -121,7 +121,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         # 2. This is a function to group activities that were performed on the same day.  The result will be a
         # dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models for
-        # that date (i.e. records of the habit being performed on that day, no matter the time)
+        # that date (i.e. records of the habit being performed on that day/week, no matter the time)
         def group_by_date(grouped, activity):
             curr_date = activity["performance_period"]
             if curr_date not in grouped:
