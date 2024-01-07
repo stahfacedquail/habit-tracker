@@ -81,6 +81,12 @@ class TestStreaksForDailyHabits:
         streaks = habit.get_all_streaks()
         assert len(streaks) == 0
 
+    def test_no_activities(self):
+        habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")
+        streaks = habit.get_all_streaks()
+        assert streaks is not None
+        assert len(streaks) == 0
+
     def teardown_method(self):
         db.remove_tables()
         db.disconnect()
@@ -229,6 +235,12 @@ class TestStreaksForWeeklyHabits:
         habit.perform("2023-10-30 20:09:22")
 
         streaks = habit.get_all_streaks()
+        assert len(streaks) == 0
+
+    def test_no_activities(self):
+        habit = Habit("Phone parents", "weekly", "2023-05-28 18:15:43")
+        streaks = habit.get_all_streaks()
+        assert streaks is not None
         assert len(streaks) == 0
 
     def teardown_method(self):
