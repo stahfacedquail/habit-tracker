@@ -168,7 +168,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         """
         Calculates the user's most recent streak, or if their most recent performance of the habit isn't part of a
         streak, that performance is returned as a "streak" that lasted for one period.
-        :return:
+        :return: A dictionary object containing the accurate start and end dates of the streak, the length of the
+            streak, and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days"
+            or "weeks").
         """
 
         if len(self.__activities__) == 0:
@@ -179,31 +181,36 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 "unit": self.get_streak_unit()
             }
 
-        activities_grouped_by_date = utils.group_activities_by_performance_period(
-            self.__activities__, self.__recurrence__)
+        activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
+                                                                                  self.__recurrence__)
         active_dates = list(activities_grouped_by_date.keys())
 
         if len(active_dates) > 1:
-            active_dates.sort(reverse=True)
+            active_dates.sort(reverse=True)  # sort from most recent performance date to oldest
 
-            streak_end = active_dates[0]
+            streak_end = active_dates[0]  # most recent performance date
             streak_end_dt = utils.to_datetime(f"{streak_end} 00:00:00")
-            streak_start = None
-            streak_length = 1
-            interval = 1 if self.__recurrence__ == "daily" else 7
-            idx = 1
+            streak_start = None  # need to figure out when this streak started
+            streak_length = 1  # we definitely know it is at least 1 period long
+            interval = 1 if self.__recurrence__ == "daily" else 7  # number of days that make up one period
+            idx = 1  # start looking for the start of the streak from second date onwards
             while idx < len(self.__activities__) and streak_start is None:
                 curr_dt = utils.to_datetime(f"{active_dates[idx]} 00:00:00")
+                # `diff` is the difference in days between the current date and the end of the streak
                 diff = utils.get_num_days_from_to(curr_dt, streak_end_dt, False)
+                # If `curr_dt` is the date we are expecting in order for the streak to continue...
                 if diff == interval * streak_length:
-                    streak_length += 1
+                    streak_length += 1  # ... document that the streak indeed goes on
                     if (idx + 1) == len(active_dates):
+                        # If we've reached the end of the list, then `curr_dt` is the start of the streak
                         streak_start = active_dates[idx]
                     else:
+                        # Otherwise, look at the next date to see if the streak includes it too
                         idx += 1
                 else:
+                    # `curr_dt` has broken the streak, so the actual start of the start is the date that came before it
                     streak_start = active_dates[idx - 1]
-        else:
+        else:  # only activities recorded happened in one period, so this is the beginning and the end of the streak
             streak_start = active_dates[0]
             streak_end = active_dates[0]
 

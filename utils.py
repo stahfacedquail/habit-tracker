@@ -101,6 +101,16 @@ def group_activities_by_performance_period(activities: list[object], habit_recur
 
 
 def get_streak_accurate_params(start_date_activities: str, end_date_activities: str, habit: object):
+    """
+    Given the activities from the streak's start date and the activities from the streak's end date, figure out the
+    earliest activity in the first batch and the latest activity in the latter; these are the accurate beginning and
+    ending dates of the streak.
+    :param start_date_activities: A date-only string, e.g. "2023-01-24"
+    :param end_date_activities: A date-only string, e.g. "2023-01-31"
+    :param habit: The Habit model to whom the activities belong
+    :return: A dictionary object containing the accurate start and end dates of the streak, the length of the streak,
+        and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days" or "weeks").
+    """
     def get_first_activity(activities: list[object]):
         activities.sort(key=lambda activity: activity.get_performed_at())
         return activities[0]
