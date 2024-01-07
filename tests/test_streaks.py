@@ -246,3 +246,187 @@ class TestStreaksForWeeklyHabits:
     def teardown_method(self):
         db.remove_tables()
         db.disconnect()
+
+class TestCurrentStreak:
+    def setup_method(self):
+        db.connect("test.db")
+        db.setup_tables()
+
+    def test_no_activities(self):
+        habit = Habit("Practise piano", "daily", "2023-05-28 09:22:57")
+        current_streak = habit.get_current_streak()
+        assert current_streak is not None
+        assert current_streak["start"] is None
+        assert current_streak["end"] is None
+        assert current_streak["length"] == 0
+        assert current_streak["unit"] == "days"
+
+    def test_one_period_streak(self):
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 09:21:57")
+            habit.perform("2023-05-31 11:17:49")
+            habit.perform("2023-06-15 17:00:34")
+            habit.perform("2023-06-17 00:55:21")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-17 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-06-17 00:55:21")
+            assert current_streak["length"] == 1
+            assert current_streak["unit"] == "days"
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 09:21:57")
+            habit.perform("2023-05-31 10:17:49")
+            habit.perform("2023-06-15 18:00:34")
+            habit.perform("2023-06-28 00:55:21")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-28 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-06-28 00:55:21")
+            assert current_streak["length"] == 1
+            assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_one_period_streak_with_multiple_performances_per_period(self):
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-05-31 11:17:49")
+            habit.perform("2023-05-31 17:00:34")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-05-31 17:00:34")
+            assert current_streak["length"] == 1
+            assert current_streak["unit"] == "days"
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-03 11:17:49")
+            habit.perform("2023-06-03 12:06:52")
+            habit.perform("2023-06-04 17:00:34")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-06-04 17:00:34")
+            assert current_streak["length"] == 1
+            assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_multi_period_streak(self):
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-01 11:17:49")
+            habit.perform("2023-06-02 17:00:34")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-06-02 17:00:34")
+            assert current_streak["length"] == 3
+            assert current_streak["unit"] == "days"
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-07 11:17:49")
+            habit.perform("2023-06-12 17:00:34")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-06-12 17:00:34")
+            assert current_streak["length"] == 3
+            assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_multi_period_streak_with_multiple_performances_per_period(self):
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:25")
+            habit.perform("2023-05-31 14:12:02")
+            habit.perform("2023-05-31 18:23:48")
+            habit.perform("2023-06-01 11:05:25")
+            habit.perform("2023-06-01 13:17:16")
+            habit.perform("2023-06-12 09:00:42")
+            habit.perform("2023-06-12 19:52:27")
+            habit.perform("2023-06-15 00:19:04")
+            habit.perform("2023-06-16 11:25:31")
+            habit.perform("2023-06-16 17:08:51")
+            habit.perform("2023-06-17 15:49:20")
+            habit.perform("2023-06-17 20:12:49")
+            habit.perform("2023-06-17 23:36:26")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-15 00:19:04")
+            assert current_streak["end"] == utils.to_datetime("2023-06-17 23:36:26")
+            assert current_streak["length"] == 3
+            assert current_streak["unit"] == "days"
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-06 11:17:49")
+            habit.perform("2023-06-07 23:10:35")
+            habit.perform("2023-06-12 17:00:34")
+            habit.perform("2023-06-15 22:40:24")
+            habit.perform("2023-06-16 21:52:51")
+            habit.perform("2023-06-30 14:18:32")
+            habit.perform("2023-06-30 20:19:39")
+            habit.perform("2023-07-01 19:56:15")
+            habit.perform("2023-07-03 16:42:58")
+            habit.perform("2023-07-10 07:29:36")
+            habit.perform("2023-07-10 22:11:33")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-30 14:18:32")
+            assert current_streak["end"] == utils.to_datetime("2023-07-10 22:11:33")
+            assert current_streak["length"] == 3
+            assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_with_many_streaks(self):
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-01 11:17:49")
+            habit.perform("2023-06-12 17:00:34")
+            habit.perform("2023-06-15 00:55:21")
+            habit.perform("2023-06-16 11:17:49")
+            habit.perform("2023-06-17 15:23:44")
+            habit.perform("2023-06-22 16:03:57")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-22 16:03:57")
+            assert current_streak["end"] == utils.to_datetime("2023-06-22 16:03:57")
+            assert current_streak["length"] == 1
+            assert current_streak["unit"] == "days"
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
+            habit.perform("2023-05-31 00:55:21")
+            habit.perform("2023-06-07 11:17:49")
+            habit.perform("2023-06-12 17:00:34")
+            habit.perform("2023-06-30 00:55:21")
+            habit.perform("2023-07-06 11:17:49")
+            current_streak = habit.get_current_streak()
+            assert current_streak is not None
+            assert current_streak["start"] == utils.to_datetime("2023-06-30 00:55:21")
+            assert current_streak["end"] == utils.to_datetime("2023-07-06 11:17:49")
+            assert current_streak["length"] == 2
+            assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def teardown_method(self):
+        db.remove_tables()
+        db.disconnect()

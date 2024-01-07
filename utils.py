@@ -1,6 +1,7 @@
 from uuid import uuid4
 from datetime import datetime, timedelta
 from math import floor
+from functools import reduce
 
 
 def make_uuid():
@@ -68,3 +69,53 @@ def get_week_start_date(date_a: datetime):
     :return: 11 December 2023 (the Monday that begins the week containing 12 December 2023)
     """
     return strip_out_time(date_a) - timedelta(date_a.weekday())
+
+
+def group_activities_by_performance_period(activities: list[object], habit_recurrence: str):
+    """
+    Group activities by the day or week in which they were performed.
+    :param activities: A list of Activity models for a particular habit.
+    :param habit_recurrence: i.e. "daily" or "weekly"
+    :return: A dictionary object where each key is a date-only string and the value is a list of activities.
+        * Key: For daily habits, each date is a day on which the habit was performed.  For weekly habits, each date is
+        the Monday of a week in which the habit was performed.
+        * Value: The list of performances of the habit (Activity models) that occurred in that day/week.
+    """
+    augmented_activities = list(map(
+        lambda x: {
+            "model": x,
+            "performance_period": to_date_only_string(
+                x.get_performed_at() if habit_recurrence == "daily"
+                else get_week_start_date(x.get_performed_at())
+            )
+        }, activities))
+
+    def group_by_date(grouped, activity):
+        curr_date = activity["performance_period"]
+        if curr_date not in grouped:
+            grouped[curr_date] = []
+        grouped[curr_date].append(activity["model"])
+        return grouped
+
+    return reduce(group_by_date, augmented_activities, {})
+
+
+def get_streak_accurate_params(start_date_activities: str, end_date_activities: str, habit: object):
+    def get_first_activity(activities: list[object]):
+        activities.sort(key=lambda activity: activity.get_performed_at())
+        return activities[0]
+
+    def get_last_activity(activities: list[object]):
+        activities.sort(key=lambda activity: activity.get_performed_at())
+        return activities[-1]
+
+    accurate_start = get_first_activity(start_date_activities).get_performed_at()
+    accurate_end = get_last_activity(end_date_activities).get_performed_at()
+    length = get_num_days_from_to(accurate_start, accurate_end) if habit.get_recurrence() == "daily" \
+        else get_num_weeks_from_to(accurate_start, accurate_end)
+    return {
+        "start": accurate_start,
+        "end": accurate_end,
+        "length": length,
+        "unit": habit.get_streak_unit()
+    }

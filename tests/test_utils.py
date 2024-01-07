@@ -1,5 +1,7 @@
+import db
 import utils
 from datetime import datetime
+from classes.habit import Habit
 
 
 class TestUtils:
@@ -92,3 +94,48 @@ class TestUtils:
 
         test_non_monday_dt()
         test_monday_dt()
+
+    def test_grouping(self):
+        def setup_method():
+            db.connect("test.db")
+            db.setup_tables()
+
+        def teardown_method():
+            db.remove_tables()
+            db.disconnect()
+
+        def test_no_activities():
+            habit = Habit("Practise piano", "daily", "2023-05-28 18:15:32")
+            grouped_by_dt = utils.group_activities_by_performance_period(habit.get_activities(), habit.get_recurrence())
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 0
+
+        def test_grouping_by_day():
+            habit = Habit("Practise piano", "daily", "2023-05-28 18:15:32")
+            habit.perform("2023-05-29 20:12:12")
+            habit.perform("2023-05-29 22:05:56")
+            habit.perform("2023-06-03 01:37:05")
+            grouped_by_dt = utils.group_activities_by_performance_period(habit.get_activities(), habit.get_recurrence())
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-05-29"]) == 2
+            assert len(grouped_by_dt["2023-06-03"]) == 1
+
+        def test_grouping_by_week():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 18:15:32")
+            habit.perform("2023-05-31 20:12:12")
+            habit.perform("2023-06-02 22:05:56")
+            habit.perform("2023-06-02 01:37:05")
+            habit.perform("2023-06-24 21:04:22")
+            grouped_by_dt = utils.group_activities_by_performance_period(habit.get_activities(), habit.get_recurrence())
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-05-29"]) == 3
+            assert len(grouped_by_dt["2023-06-19"]) == 1
+
+        setup_method()
+        test_no_activities()
+        test_grouping_by_day()
+        test_grouping_by_week()
+        teardown_method()
+
