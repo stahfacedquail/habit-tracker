@@ -1,7 +1,7 @@
 from datetime import datetime
 from multimethod import multimethod
 from typing import Union, Optional
-from db import create_habit, get_habit
+from db import create_habit, get_habit, delete_habit
 import utils
 from classes.activity import Activity
 
@@ -249,6 +249,5 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         return self.__activities__[-1].get_performed_at()
 
-
-
-
+    def remove(self):
+        delete_habit(self.__uuid__)

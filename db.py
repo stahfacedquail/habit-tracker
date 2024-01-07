@@ -120,3 +120,9 @@ def get_habit(uuid):
         "activities": activities,
     }
 
+
+def delete_habit(uuid):
+    cur = db_connection.cursor()
+    cur.execute("DELETE FROM activities WHERE habit = ?", (uuid,))
+    cur.execute("DELETE FROM habits WHERE uuid = ?", (uuid,))
+

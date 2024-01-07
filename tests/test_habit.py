@@ -83,6 +83,19 @@ class TestHabit:
         assert last_performed_dt.minute == 46
         assert last_performed_dt.second == 6
 
+    def test_delete(self):
+        habit = Habit("Phone parents", "weekly", "2023-05-29 19:04:55")
+        habit.perform("2023-05-29 21:12:32")
+        habit.perform("2023-05-31 14:54:22")
+        habit.perform("2023-06-11 06:55:10")
+        habit.perform("2023-06-17 18:25:43")
+        habit.perform("2023-06-25 20:46:06")
+
+        uuid = habit.get_uuid()
+        habit.remove()
+        db_item = db.get_habit(uuid)
+        assert db_item["habit"] is None
+        assert db_item["activities"] == []
 
     def teardown_method(self):
         db.remove_tables()
