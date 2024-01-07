@@ -229,13 +229,13 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
     def get_completion_rate(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
         get_num_periods_from_to = utils.get_num_days_from_to if self.__recurrence__ == "daily" \
-            else utils.get_num_weeks_from_to()
+            else utils.get_num_weeks_from_to
         if start_date is None:
             start_date = self.__created_at__
         if end_date is None:
             end_date = self.__activities__[-1].get_performed_at()
         num_total_periods = get_num_periods_from_to(start_date, end_date)
-        num_active_dates = self.get_number_of_times_completed()
+        num_active_dates = self.get_number_of_times_completed(start_date, end_date)
 
         return {
             "num_active_periods": num_active_dates,
