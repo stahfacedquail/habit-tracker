@@ -139,3 +139,43 @@ class TestUtils:
         test_grouping_by_week()
         teardown_method()
 
+    def test_get_accurate_streak_params(self):
+        def setup_method():
+            db.connect("test.db")
+            db.setup_tables()
+
+        def teardown_method():
+            db.remove_tables()
+            db.disconnect()
+
+        setup_method()
+
+        habit = Habit("Phone parents", "weekly", "2023-09-14 20:01:16")
+        habit.perform("2023-09-18 16:20:30")
+        habit.perform("2023-09-21 16:42:11")
+        habit.perform("2023-09-21 21:30:31")
+        habit.perform("2023-09-23 20:30:47")
+        habit.perform("2023-09-27 05:16:00")
+        habit.perform("2023-09-27 13:00:01")
+        habit.perform("2023-09-27 20:57:17")
+        week_1_activities = list(filter(
+            lambda activity: utils.to_datetime("2023-09-18 00:00:00")
+            <= activity.get_performed_at()
+            < utils.to_datetime("2023-09-25 00:00:00"), habit.get_activities()))
+        week_2_activities = list(filter(
+            lambda activity: utils.to_datetime("2023-09-25 00:00:00")
+            <= activity.get_performed_at()
+            < utils.to_datetime("2023-10-02 00:00:00"), habit.get_activities()))
+        params = utils.get_streak_accurate_params(
+            week_1_activities,
+            week_2_activities,
+            habit
+        )
+
+        assert params["start"] == utils.to_datetime("2023-09-18 16:20:30")
+        assert params["end"] == utils.to_datetime("2023-09-27 20:57:17")
+        assert params["length"] == 2
+        assert params["unit"] == "weeks"
+
+        teardown_method()
+
