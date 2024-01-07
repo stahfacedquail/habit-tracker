@@ -116,9 +116,6 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 )
             }, self.__activities__))
 
-        for a in augmented_activities:
-            print(a["performance_period"])
-
         # 2. This is a function to group activities that were performed on the same day.  The result will be a
         # dictionary where each key is a date string like "2023-12-01" and the value is the list of Activity models for
         # that date (i.e. records of the habit being performed on that day/week, no matter the time)
@@ -129,19 +126,21 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             grouped[curr_date].append(activity["model"])
             return grouped
 
-        dict_activities_per_day = reduce(group_by_date, augmented_activities, {})
+        dict_activities_per_period = reduce(group_by_date, augmented_activities, {})
 
         # 3. Extract a list of the unique dates on which the habit was performed and make sure it's sorted in ascending
         # order.
-        active_dates = list(dict_activities_per_day.keys())
+        active_dates = list(dict_activities_per_period.keys())
         active_dates.sort()
 
         # 4. Now for the business of computing the streaks.
         # `streaks`: Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04"), indicating when a
         # streak started and ended
         streaks = []
-        # `streak_start`: If we peek ahead and see that we are observing a streak, this variable will hold onto the date
-        # currently being looked at
+        # `streak_start`: Holds onto a date and uses it as the reference point as we iterate through the subsequent
+        # dates to see if a streak is formed.  Once a streak breaks, `streak_start` will be replaced by the date that
+        # broke the streak and the cycle of comparisons will resume.  `streak_start` being None indicates that we are
+        # ready to start observing a new streak.
         streak_start = None
         # `streak_length` keeps count of how many unique periods (days/weeks) make up the streak
         streak_length = 0
@@ -196,8 +195,8 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         return list(map(
             lambda streak: get_streak_accurate_params(
-                dict_activities_per_day[streak[0]],
-                dict_activities_per_day[streak[1]],
+                dict_activities_per_period[streak[0]],
+                dict_activities_per_period[streak[1]],
                 self.__recurrence__
             ),
             streaks
