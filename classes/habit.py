@@ -1,9 +1,7 @@
-import datetime
-
-from db import create_habit, get_habit
+from datetime import datetime
 from multimethod import multimethod
 from typing import Union, Optional
-from functools import reduce
+from db import create_habit, get_habit
 import utils
 from classes.activity import Activity
 
@@ -112,8 +110,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         # 2. Extract a list of the unique dates on which the habit was performed and make sure it's sorted in ascending
         # order.
-        active_dates = list(dict_activities_per_period.keys())
-        active_dates.sort()
+        active_dates = sorted(dict_activities_per_period)
 
         # 3. Now for the business of computing the streaks.
         # `streaks`: Initially, this will just be a list of tuples like ("2023-12-01", "2023-12-04"), indicating when a
@@ -183,11 +180,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
                                                                                   self.__recurrence__)
-        active_dates = list(activities_grouped_by_date.keys())
+        active_dates = sorted(activities_grouped_by_date, reverse=True) # sort from most recent performance to oldest
 
         if len(active_dates) > 1:
-            active_dates.sort(reverse=True)  # sort from most recent performance date to oldest
-
             streak_end = active_dates[0]  # most recent performance date
             streak_end_dt = utils.to_datetime(f"{streak_end} 00:00:00")
             streak_start = None  # need to figure out when this streak started
@@ -220,6 +215,13 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             self
         )
 
-
-
-
+    def get_number_of_times_completed(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
+        """
+        Counts the number of unique periods in which the habit has been performed.  Note that performing the habit five
+        times in one period counts as it being completed once, not five times.  Either or both `start_date` and
+        `end_date` can be omitted, e.g. omitting `end_date` will start counting from `start_date` until the most recent
+        performance of the habit, and omitting both will calculate it from the first performance of the habit to the
+        last one.
+        :return: The number of unique periods within the date range as described above, on which the habit was performed
+        """
+        active_dates = list(utils.group_activities_by_performance_period())

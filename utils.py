@@ -111,16 +111,11 @@ def get_streak_accurate_params(start_date_activities: str, end_date_activities: 
     :return: A dictionary object containing the accurate start and end dates of the streak, the length of the streak,
         and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days" or "weeks").
     """
-    def get_first_activity(activities: list[object]):
-        activities.sort(key=lambda activity: activity.get_performed_at())
-        return activities[0]
+    first_activity = sorted(start_date_activities, key=lambda activity: activity.get_performed_at())[0]
+    last_activity = sorted(end_date_activities, key=lambda activity: activity.get_performed_at())[-1]
 
-    def get_last_activity(activities: list[object]):
-        activities.sort(key=lambda activity: activity.get_performed_at())
-        return activities[-1]
-
-    accurate_start = get_first_activity(start_date_activities).get_performed_at()
-    accurate_end = get_last_activity(end_date_activities).get_performed_at()
+    accurate_start = first_activity.get_performed_at()
+    accurate_end = last_activity.get_performed_at()
     length = get_num_days_from_to(accurate_start, accurate_end) if habit.get_recurrence() == "daily" \
         else get_num_weeks_from_to(accurate_start, accurate_end)
     return {
