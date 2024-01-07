@@ -133,6 +133,8 @@ class TestUtils:
             assert len(grouped_by_dt["2023-05-29"]) == 3
             assert len(grouped_by_dt["2023-06-19"]) == 1
 
+        # TODO: Test filtering
+
         setup_method()
         test_no_activities()
         test_grouping_by_day()

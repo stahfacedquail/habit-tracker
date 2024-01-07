@@ -1,5 +1,6 @@
 from uuid import uuid4
 from datetime import datetime, timedelta
+from typing import Optional
 from math import floor
 from functools import reduce
 
@@ -71,24 +72,39 @@ def get_week_start_date(date_a: datetime):
     return strip_out_time(date_a) - timedelta(date_a.weekday())
 
 
-def group_activities_by_performance_period(activities: list[object], habit_recurrence: str):
+def group_activities_by_performance_period(activities: list[object], habit_recurrence: str,
+                                           start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
     """
     Group activities by the day or week in which they were performed.
     :param activities: A list of Activity models for a particular habit.
     :param habit_recurrence: i.e. "daily" or "weekly"
+    :param start_date: Only consider activities from this date onwards
+    :param end_date: Only consider activities up to and including this date
     :return: A dictionary object where each key is a date-only string and the value is a list of activities.
         * Key: For daily habits, each date is a day on which the habit was performed.  For weekly habits, each date is
         the Monday of a week in which the habit was performed.
         * Value: The list of performances of the habit (Activity models) that occurred in that day/week.
     """
-    augmented_activities = list(map(
+    def make_date_range_fn(start: Optional[datetime], end: Optional[datetime]):
+        if start is not None and end is not None:  # both bounds explicitly given
+            return lambda x: start <= x <= end
+        if start is None and end is None:  # no explicit bounds, so let everything through
+            return lambda x: True
+        if start is None:  # no lower bound, but upper bound defined
+            return lambda x: x <= end
+        if end is None:  # no upper bound, but lower bound is defined
+            return lambda x: x >= start
+    check_date_in_range = make_date_range_fn(start_date, end_date)
+    filtered_activities = filter(lambda x: check_date_in_range, activities)
+
+    augmented_activities = map(
         lambda x: {
             "model": x,
             "performance_period": to_date_only_string(
                 x.get_performed_at() if habit_recurrence == "daily"
                 else get_week_start_date(x.get_performed_at())
             )
-        }, activities))
+        }, filtered_activities)
 
     def group_by_date(grouped, activity):
         curr_date = activity["performance_period"]
