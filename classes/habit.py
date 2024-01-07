@@ -243,4 +243,12 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             "rate": num_active_dates / num_total_periods
         }
 
+    def get_date_last_performed(self):
+        if len(self.__activities__) == 0:
+            return None
+
+        return self.__activities__[-1].get_performed_at()
+
+
+
 

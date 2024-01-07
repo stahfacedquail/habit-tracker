@@ -67,6 +67,23 @@ class TestHabit:
         habit_string = str(habit).split("\n")
         assert habit_string[3] == "Has been performed 4 times"
 
+    def test_get_last_performed_date(self):
+        habit = Habit("Phone parents", "weekly", "2023-05-29 19:04:55")
+        habit.perform("2023-05-29 21:12:32")
+        habit.perform("2023-05-31 14:54:22")
+        habit.perform("2023-06-11 06:55:10")
+        habit.perform("2023-06-17 18:25:43")
+        habit.perform("2023-06-25 20:46:06")
+
+        last_performed_dt = habit.get_date_last_performed()
+        assert last_performed_dt.year == 2023
+        assert last_performed_dt.month == 6
+        assert last_performed_dt.day == 25
+        assert last_performed_dt.hour == 20
+        assert last_performed_dt.minute == 46
+        assert last_performed_dt.second == 6
+
+
     def teardown_method(self):
         db.remove_tables()
         db.disconnect()
