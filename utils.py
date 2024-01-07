@@ -87,15 +87,15 @@ def group_activities_by_performance_period(activities: list[object], habit_recur
     """
     def make_date_range_fn(start: Optional[datetime], end: Optional[datetime]):
         if start is not None and end is not None:  # both bounds explicitly given
-            return lambda x: start <= x <= end
+            return lambda x: start <= x.get_performed_at() <= end
         if start is None and end is None:  # no explicit bounds, so let everything through
             return lambda x: True
         if start is None:  # no lower bound, but upper bound defined
-            return lambda x: x <= end
+            return lambda x: x.get_performed_at() <= end
         if end is None:  # no upper bound, but lower bound is defined
-            return lambda x: x >= start
+            return lambda x: x.get_performed_at() >= start
     check_date_in_range = make_date_range_fn(start_date, end_date)
-    filtered_activities = filter(lambda x: check_date_in_range, activities)
+    filtered_activities = filter(check_date_in_range, activities)
 
     augmented_activities = map(
         lambda x: {
