@@ -1,30 +1,55 @@
-def get_habits(columns: list[str]):
-    """
-    Fetch all the user's habits, displaying their titles and the `columns` specified.
-    :param columns: The properties of the habits that must be computed (in some cases) and returned
-    :return: A list of tuples, each tuple starting with the habit's titles and then the rest of the details stipulated
-        by `columns`
-    """
-    # MANDATORY
-    # Column 1 -> title
-    # OPTIONAL
-    # Column 2 -> created_at
-    # Column 3 -> recurrence
-    # Column 4 -> last_performed
-    # Column 5 -> num times performed
-    # Column 6 -> completion rate
-    # Column 7 -> length of current streak
+from typing import Optional
+import db
+from classes.habit import Habit
 
 
-def sort_habits(habits: list[tuple], prop: str, order: str):
+# props = {
+#     "title": True,  # not an optional field; the rest are
+#     "created_at": False,
+#     "recurrence": False,
+#     "last_performed": False,
+#     "num_periods_performed": False,
+#     "completion_rate": False,
+#     "current_streak": False
+# }
+
+
+def get_habits():
+    """
+    Fetch all the user's habits.
+    :return: A list of tuples containing various properties of the user's habits.
+    """
+    all_habits = db.get_all_habits()
+
+    def compute_properties(habit_tuple: tuple):
+        habit = Habit(habit_tuple)
+        return {
+            "title": habit.get_title(),
+            "created_at": habit.get_created_at(),
+            "recurrence": habit.get_recurrence(),
+            "last_performed": habit.get_date_last_performed(),
+            "num_periods_performed": habit.get_number_of_times_completed(),
+            "completion_rate": habit.get_completion_rate(),
+            "current_streak": habit.get_current_streak(),
+        }
+
+    return list(map(compute_properties, all_habits))
+
+
+def sort_habits(habits: list[dict], order: str, primary_prop: str, secondary_prop: Optional[str] = None):
     """
     Sort the list of habit tuples.
     :param habits: A list of tuples each containing details about a habit
-    :param prop: The property by which to sort the list, e.g. "completion_rate"
+    :param primary_prop: The property by which to sort the list, e.g. "completion_rate"
+    :param secondary_prop: Sometimes there is more than one way to sort on `primary_prop`, e.g. for "current_streak",
+        one can sort by length of the streak or by date.
     :param order: "asc" or "desc", i.e. whether to sort by ascending or descending order
     :return: A new list of habit tuples, sorted as requested
     """
-    pass
+    if secondary_prop is None:
+        return sorted(habits, key=lambda h: h[primary_prop], reverse=(order == "desc"))
+    else:
+        return sorted(habits, key=lambda h: h[primary_prop][secondary_prop], reverse=(order == "desc"))
 
 
 def filter_habits(habits: list[tuple], prop: str, value: any):
@@ -35,4 +60,4 @@ def filter_habits(habits: list[tuple], prop: str, value: any):
     :param value: Only display habits whose value for the requested `prop` is `value`
     :return: A new list of habit tuples, filtered as requested
     """
-    pass
+    return list(filter(lambda h: h[prop] == value, habits))

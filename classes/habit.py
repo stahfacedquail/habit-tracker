@@ -31,6 +31,14 @@ class Habit:
         fetched_habit = get_habit(uuid)
         self.__parse_from_db__(fetched_habit)
 
+    @multimethod
+    def __init__(self, db_item: dict[str, tuple | list[tuple]]):
+        """
+        Initialise the model to represent an existing habit (from the database).
+        :param db_item: The tuple representing a record from the "habits" table in the database.
+        """
+        self.__parse_from_db__(db_item)
+
     def get_uuid(self):
         return self.__uuid__
 
