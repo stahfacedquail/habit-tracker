@@ -1,6 +1,3 @@
-from classes.habit import Habit
-
-
 def get_habits(columns: list[str]):
     """
     Fetch all the user's habits, displaying their titles and the `columns` specified.

@@ -3,7 +3,6 @@ import data
 from utils import make_uuid
 
 # global database connection for the application
-# TODO: Instead of a global connection, return from `connect` and pass it around?
 db_connection = None
 
 
@@ -125,4 +124,45 @@ def delete_habit(uuid):
     cur = db_connection.cursor()
     cur.execute("DELETE FROM activities WHERE habit = ?", (uuid,))
     cur.execute("DELETE FROM habits WHERE uuid = ?", (uuid,))
+
+
+def get_all_habits():
+    """
+    Fetch all the habit records, as well as all the activity records.
+    :return: A list of dictionary objects, where each object has a "habit" key whose value is a tuple containing the
+        data of one record from the "habits" table, and an "activities" key whose value is a list of tuples, each of
+        which contain the data of one record from the "activities" table.  The activities are the subset belonging to
+        that particular habit.
+    """
+    cur = db_connection.cursor()
+    cur.execute("SELECT * FROM habits ORDER BY uuid")
+    habit_tuples = cur.fetchall()
+    augmented_habits = []  # i.e. habits with their list of when they got done
+
+    cur.execute("SELECT * FROM activities ORDER BY habit, performed_at")
+    activity_tuples = cur.fetchall()
+
+    activity_idx = 0  # index to loop from start to end of `activity_tuples`
+    for habit in habit_tuples:
+        augmented_habit = {
+            "habit": habit,
+            "activities": []
+        }
+        habit_id = habit[0]
+
+        # Since activities were fetched ordered by their parent habit's id, we will add one activity at a time to a
+        # habit, until we encounter the first activity to have a different parent habit than the one we are currently
+        # considering (i.e. `habit`).  At that point, we will know to move on to the next habit in `habit_tuples`.
+        for idx in range(activity_idx, len(activity_tuples)):
+            activity = activity_tuples[idx]
+            parent_habit_id = activity[1]
+            if parent_habit_id == habit_id:
+                augmented_habit["activities"].append(activity)
+            else:
+                activity_idx = idx  # Make a note to continue looking at the activities from this index
+                break
+
+        augmented_habits.append(augmented_habit)
+
+    return augmented_habits
 
