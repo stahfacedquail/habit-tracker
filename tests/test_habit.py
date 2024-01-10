@@ -49,6 +49,33 @@ class TestHabit:
         assert execution.get_performed_at().month == date.today().month
         assert execution.get_performed_at().year == date.today().year
 
+    def test_fetch_habit(self):
+        habit = Habit("Practise piano", "daily", "2023-05-28 19:01:33")
+        habit.perform()
+        habit_id = habit.get_uuid()
+
+        habit_copy = Habit(habit_id)
+        assert habit_copy.get_uuid() == habit_id
+        assert habit_copy.get_title() == "Practise piano"
+        assert habit_copy.get_recurrence() == "daily"
+        assert habit_copy.get_created_at() == utils.to_datetime("2023-05-28 19:01:33")
+        assert len(habit_copy.get_activities()) == 1
+
+    def test_initialise_from_db_dict_item(self):
+        db_item = {
+            "habit": ("dbf01807-ef61-485f-9637-cd53ee49e09e", "Practise piano", "daily", "2023-05-28 19:33:12"),
+            "activities": [
+                ("c9b9b03e-90b4-40af-b38d-0f0dd94ed190", "dbf01807-ef61-485f-9637-cd53ee49e09e", "2023-05-29 19:23:00"),
+                ("bc6e8b96-e019-48ef-aaaa-4102cb8fab32", "dbf01807-ef61-485f-9637-cd53ee49e09e", "2023-05-31 05:15:23")
+            ]
+        }
+        habit_model = Habit(db_item)
+        assert habit_model.get_uuid() == "dbf01807-ef61-485f-9637-cd53ee49e09e"
+        assert habit_model.get_title() == "Practise piano"
+        assert habit_model.get_recurrence() == "daily"
+        assert habit_model.get_created_at() == utils.to_datetime("2023-05-28 19:33:12")
+        assert len(habit_model.get_activities()) == 2
+
     def test_to_string(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 18:57:19")
         habit_string = str(habit).split("\n")
