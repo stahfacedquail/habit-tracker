@@ -257,7 +257,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         if start_date is None:
             start_date = self.__created_at__
         if end_date is None:
-            end_date = self.__activities__[-1].get_performed_at()
+            end_date = datetime.today()
         num_total_periods = get_num_periods_from_to(start_date, end_date)
         num_active_dates = self.get_number_of_times_completed(start_date, end_date)
 
