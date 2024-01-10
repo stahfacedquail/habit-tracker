@@ -166,32 +166,39 @@ class TestAnalytics:
         assert latest_streak["continuable_until"] == expected_values_3["latest_streak"]["continuable_until"]
 
     def test_sort_on_primary_prop_ascending_order(self):
-        pass
-        habits = analytics.get_habits()
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
         sorted_habits = analytics.sort_habits(habits, "asc", "num_periods_performed")
         assert sorted_habits[0]["title"] == "Water plants"
         assert sorted_habits[1]["title"] == "Phone parents"
         assert sorted_habits[2]["title"] == "Practise piano"
 
     def test_sort_on_secondary_prop_descending_order(self):
-        habits = analytics.get_habits()
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
         sorted_habits = analytics.sort_habits(habits, "desc", "completion_rate", "rate")
         assert sorted_habits[0]["title"] == "Phone parents"
         assert sorted_habits[1]["title"] == "Practise piano"
         assert sorted_habits[2]["title"] == "Water plants"
 
     def test_sort_with_none_type_values(self):
-        habits = analytics.get_habits()
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
         sorted_habits = analytics.sort_habits(habits, "asc", "last_performed")
         assert sorted_habits[0]["title"] == "Water plants"
         assert sorted_habits[1]["title"] == "Practise piano"
         assert sorted_habits[2]["title"] == "Phone parents"
 
     def test_filter_returns_results(self):
-        pass
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
+        filtered_habits = analytics.filter_habits(habits, "recurrence", "weekly")
+        assert len(filtered_habits) == 2
+
+        filtered_habit_titles = list(map(lambda h: h["title"], filtered_habits))
+        assert "Water plants" in filtered_habit_titles
+        assert "Phone parents" in filtered_habit_titles
 
     def test_filter_returns_no_results(self):
-        pass
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
+        filtered_habits = analytics.filter_habits(habits, "recurrence", "non_existent_type")
+        assert len(filtered_habits) == 0
 
     def teardown_method(self):
         db.remove_tables()
