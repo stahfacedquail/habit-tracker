@@ -182,7 +182,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 "length": 0,
                 "start": None,
                 "end": None,
-                "unit": self.get_streak_unit()
+                "unit": self.get_streak_unit(),
+                "is_current": None,
+                "continuable_until": None,
             }
 
         activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
