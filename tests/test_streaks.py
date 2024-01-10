@@ -26,14 +26,14 @@ class TestStreaksForDailyHabits:
         streaks = habit.get_all_streaks()
         assert len(streaks) == 2
         streak_1 = streaks[0]
-        assert streak_1["start"] == utils.to_datetime("2023-05-28 18:15:55")
-        assert streak_1["end"] == utils.to_datetime("2023-05-30 16:57:59")
-        assert streak_1["length"] == 3
+        assert streak_1["start"] == utils.to_datetime("2023-06-02 19:29:09")
+        assert streak_1["end"] == utils.to_datetime("2023-06-08 18:53:14")
+        assert streak_1["length"] == 7
         assert streak_1["unit"] == "days"
         streak_2 = streaks[1]
-        assert streak_2["start"] == utils.to_datetime("2023-06-02 19:29:09")
-        assert streak_2["end"] == utils.to_datetime("2023-06-08 18:53:14")
-        assert streak_2["length"] == 7
+        assert streak_2["start"] == utils.to_datetime("2023-05-28 18:15:55")
+        assert streak_2["end"] == utils.to_datetime("2023-05-30 16:57:59")
+        assert streak_2["length"] == 3
         assert streak_2["unit"] == "days"
 
     def test_streak_at_end_of_list(self):
@@ -86,6 +86,48 @@ class TestStreaksForDailyHabits:
         streaks = habit.get_all_streaks()
         assert streaks is not None
         assert len(streaks) == 0
+
+    def test_sorting_on_date_ascending(self):
+        habit = Habit("Practise piano", "daily", "2023-05-28 19:00:43")
+        habit.perform("2023-05-29 11:23:45")
+        habit.perform("2023-05-30 08:17:54")
+        habit.perform("2023-06-17 17:18:19")
+        habit.perform("2023-06-18 21:34:45")
+        habit.perform("2023-06-19 18:29:54")
+        habit.perform("2023-06-20 11:15:43")
+
+        streaks = habit.get_all_streaks("date", "asc")
+        streak_1 = streaks[0]
+        assert streak_1["start"] == utils.to_datetime("2023-05-29 11:23:45")
+        assert streak_1["end"] == utils.to_datetime("2023-05-30 08:17:54")
+        assert streak_1["length"] == 2
+        assert streak_1["unit"] == "days"
+        streak_2 = streaks[1]
+        assert streak_2["start"] == utils.to_datetime("2023-06-17 17:18:19")
+        assert streak_2["end"] == utils.to_datetime("2023-06-20 11:15:43")
+        assert streak_2["length"] == 4
+        assert streak_2["unit"] == "days"
+
+    def test_sorting_on_length_descending(self):
+        habit = Habit("Phone parents", "weekly", "2023-05-28 19:00:43")
+        habit.perform("2023-05-29 11:23:45")
+        habit.perform("2023-06-06 08:17:54")
+        habit.perform("2023-06-27 17:18:19")
+        habit.perform("2023-06-30 21:34:45")
+        habit.perform("2023-07-06 18:29:54")
+        habit.perform("2023-07-11 11:15:43")
+
+        streaks = habit.get_all_streaks("length", "desc")
+        streak_1 = streaks[0]
+        assert streak_1["start"] == utils.to_datetime("2023-06-27 17:18:19")
+        assert streak_1["end"] == utils.to_datetime("2023-07-11 11:15:43")
+        assert streak_1["length"] == 3
+        assert streak_1["unit"] == "weeks"
+        streak_2 = streaks[1]
+        assert streak_2["start"] == utils.to_datetime("2023-05-29 11:23:45")
+        assert streak_2["end"] == utils.to_datetime("2023-06-06 08:17:54")
+        assert streak_2["length"] == 2
+        assert streak_2["unit"] == "weeks"
 
     def teardown_method(self):
         db.remove_tables()
@@ -183,12 +225,12 @@ class TestStreaksForWeeklyHabits:
 
         streak_1 = streaks[0]
         streak_2 = streaks[1]
-        assert streak_1["start"] == utils.to_datetime("2023-09-18 16:20:30")
-        assert streak_1["end"] == utils.to_datetime("2023-09-28 21:30:31")
-        assert streak_1["length"] == 2
-        assert streak_2["start"] == utils.to_datetime("2024-01-06 17:39:39")
-        assert streak_2["end"] == utils.to_datetime("2024-01-20 21:42:03")
-        assert streak_2["length"] == 3
+        assert streak_1["start"] == utils.to_datetime("2024-01-06 17:39:39")
+        assert streak_1["end"] == utils.to_datetime("2024-01-20 21:42:03")
+        assert streak_1["length"] == 3
+        assert streak_2["start"] == utils.to_datetime("2023-09-18 16:20:30")
+        assert streak_2["end"] == utils.to_datetime("2023-09-28 21:30:31")
+        assert streak_2["length"] == 2
 
     # 3. test streak when multiple performances per week
     def test_multiple_performances_per_week(self):

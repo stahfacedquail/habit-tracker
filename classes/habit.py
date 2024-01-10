@@ -106,9 +106,11 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         for activity in db_activities:
             self.__activities__.append(Activity(activity))
 
-    def get_all_streaks(self):
+    def get_all_streaks(self, sort_by: str = "date", sort_order: str = "desc"):
         """
         Determine the date ranges for which activities were recorded for 2 or more consecutive periods (days/weeks).
+        :param sort_by: "date" or "length", i.e. should the streaks be sorted by date or by length?
+        :param sort_order: "asc" or "desc"
         :return: A list of dictionary objects, where each object has the start date and end date of the streak,
             the length of the streak, and the unit of measurement for the length of the streak (i.e. "days" or "weeks")
         """
@@ -160,7 +162,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 if streak_length > 1:
                     streaks.append((utils.to_date_only_string(streak_start), dt_string))
 
-        return list(map(
+        streaks_detailed_list = list(map(
             lambda streak: utils.get_streak_accurate_params(
                 dict_activities_per_period[streak[0]],
                 dict_activities_per_period[streak[1]],
@@ -168,6 +170,11 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             ),
             streaks
         ))
+
+        streaks_detailed_list.sort(key=lambda s: s["start"] if sort_by == "date" else s["length"],
+                                   reverse=sort_order == "desc")
+
+        return streaks_detailed_list
 
     def get_latest_streak(self, today: Optional[datetime] = datetime.today()):
         """
