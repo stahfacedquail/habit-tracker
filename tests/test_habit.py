@@ -83,6 +83,11 @@ class TestHabit:
         assert last_performed_dt.minute == 46
         assert last_performed_dt.second == 6
 
+    def test_get_last_performed_date_with_no_activities(self):
+        habit = Habit("Phone parents", "weekly", "2023-05-29 19:04:55")
+        last_performed_dt = habit.get_date_last_performed()
+        assert last_performed_dt is None
+
     def test_delete(self):
         habit = Habit("Phone parents", "weekly", "2023-05-29 19:04:55")
         habit.perform("2023-05-29 21:12:32")
