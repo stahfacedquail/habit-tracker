@@ -3,17 +3,6 @@ import db
 from classes.habit import Habit
 
 
-# props = {
-#     "title": True,  # not an optional field; the rest are
-#     "created_at": False,
-#     "recurrence": False,
-#     "last_performed": False,
-#     "num_periods_performed": False,
-#     "completion_rate": False,
-#     "current_streak": False
-# }
-
-
 def get_habits():
     """
     Fetch all the user's habits.
@@ -30,7 +19,7 @@ def get_habits():
             "last_performed": habit.get_date_last_performed(),
             "num_periods_performed": habit.get_number_of_times_completed(),
             "completion_rate": habit.get_completion_rate(),
-            "current_streak": habit.get_current_streak(),
+            "current_streak": habit.get_latest_streak(),
         }
 
     return list(map(compute_properties, all_habits))

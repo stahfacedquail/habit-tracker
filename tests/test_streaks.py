@@ -248,14 +248,14 @@ class TestStreaksForWeeklyHabits:
         db.disconnect()
 
 
-class TestCurrentStreak:
+class TestLatestStreak:
     def setup_method(self):
         db.connect("test.db")
         db.setup_tables()
 
     def test_no_activities(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 09:22:57")
-        current_streak = habit.get_current_streak()
+        current_streak = habit.get_latest_streak()
         assert current_streak is not None
         assert current_streak["start"] is None
         assert current_streak["end"] is None
@@ -268,7 +268,7 @@ class TestCurrentStreak:
             habit.perform("2023-05-31 11:17:49")
             habit.perform("2023-06-15 17:00:34")
             habit.perform("2023-06-17 00:55:21")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-17 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-17 00:55:21")
@@ -280,7 +280,7 @@ class TestCurrentStreak:
             habit.perform("2023-05-31 10:17:49")
             habit.perform("2023-06-15 18:00:34")
             habit.perform("2023-06-28 00:55:21")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-28 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-28 00:55:21")
@@ -296,7 +296,7 @@ class TestCurrentStreak:
             habit.perform("2023-05-31 00:55:21")
             habit.perform("2023-05-31 11:17:49")
             habit.perform("2023-05-31 17:00:34")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-05-31 17:00:34")
@@ -309,7 +309,7 @@ class TestCurrentStreak:
             habit.perform("2023-06-03 11:17:49")
             habit.perform("2023-06-03 12:06:52")
             habit.perform("2023-06-04 17:00:34")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-04 17:00:34")
@@ -325,7 +325,7 @@ class TestCurrentStreak:
             habit.perform("2023-05-31 00:55:21")
             habit.perform("2023-06-01 11:17:49")
             habit.perform("2023-06-02 17:00:34")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-02 17:00:34")
@@ -337,7 +337,7 @@ class TestCurrentStreak:
             habit.perform("2023-05-31 00:55:21")
             habit.perform("2023-06-07 11:17:49")
             habit.perform("2023-06-12 17:00:34")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-12 17:00:34")
@@ -363,7 +363,7 @@ class TestCurrentStreak:
             habit.perform("2023-06-17 15:49:20")
             habit.perform("2023-06-17 20:12:49")
             habit.perform("2023-06-17 23:36:26")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-15 00:19:04")
             assert current_streak["end"] == utils.to_datetime("2023-06-17 23:36:26")
@@ -384,7 +384,7 @@ class TestCurrentStreak:
             habit.perform("2023-07-03 16:42:58")
             habit.perform("2023-07-10 07:29:36")
             habit.perform("2023-07-10 22:11:33")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-30 14:18:32")
             assert current_streak["end"] == utils.to_datetime("2023-07-10 22:11:33")
@@ -404,7 +404,7 @@ class TestCurrentStreak:
             habit.perform("2023-06-16 11:17:49")
             habit.perform("2023-06-17 15:23:44")
             habit.perform("2023-06-22 16:03:57")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-22 16:03:57")
             assert current_streak["end"] == utils.to_datetime("2023-06-22 16:03:57")
@@ -418,12 +418,96 @@ class TestCurrentStreak:
             habit.perform("2023-06-12 17:00:34")
             habit.perform("2023-06-30 00:55:21")
             habit.perform("2023-07-06 11:17:49")
-            current_streak = habit.get_current_streak()
+            current_streak = habit.get_latest_streak()
             assert current_streak is not None
             assert current_streak["start"] == utils.to_datetime("2023-06-30 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-07-06 11:17:49")
             assert current_streak["length"] == 2
             assert current_streak["unit"] == "weeks"
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_latest_streak_is_old(self):
+        """
+        If today can only start a fresh streak, the last streak that was achieved should be returned.
+        """
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            habit.perform("2023-05-30 20:03:45")
+            habit.perform("2023-05-31 19:12:46")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-06-05 15:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
+            assert latest_streak["is_current"] is False
+            assert latest_streak["continuable_until"] is None
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-06-12 15:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["is_current"] is False
+            assert latest_streak["continuable_until"] is None
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_latest_streak_is_recent(self):
+        """
+        If today could extend a streak, the latest streak should be returned, along with an indication that the
+        "window" to extend the streak is still open.
+        """
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            habit.perform("2023-05-30 20:03:45")
+            habit.perform("2023-05-31 19:12:46")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-06-01 15:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
+            assert latest_streak["is_current"] is True
+            assert latest_streak["continuable_until"] == utils.to_datetime("2023-06-02 00:00:00")
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-06-07 15:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["is_current"] is True
+            assert latest_streak["continuable_until"] == utils.to_datetime("2023-06-12 00:00:00")
+
+        test_for_daily_habit()
+        test_for_weekly_habit()
+
+    def test_latest_streak_is_current(self):
+        """
+        If today is part of an ongoing streak, the details of the streak should be returned, as well as an indication
+        that today falls within the period range of the streak.
+        :return:
+        """
+        def test_for_daily_habit():
+            habit = Habit("Practise piano", "daily", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            habit.perform("2023-05-30 20:03:45")
+            habit.perform("2023-05-31 19:12:46")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-05-31 20:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
+            assert latest_streak["is_current"] is True
+            assert latest_streak["continuable_until"] is None
+
+        def test_for_weekly_habit():
+            habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
+            habit.perform("2023-05-29 18:15:36")
+            latest_streak = habit.get_latest_streak(utils.to_datetime("2023-06-01 15:00:00"))
+            assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
+            assert latest_streak["is_current"] is True
+            assert latest_streak["continuable_until"] is None
 
         test_for_daily_habit()
         test_for_weekly_habit()

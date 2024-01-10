@@ -32,7 +32,7 @@ class Habit:
         self.__parse_from_db__(fetched_habit)
 
     @multimethod
-    def __init__(self, db_item: dict[str, tuple | list[tuple]]):
+    def __init__(self, db_item: dict):
         """
         Initialise the model to represent an existing habit (from the database).
         :param db_item: The tuple representing a record from the "habits" table in the database.
@@ -169,10 +169,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             streaks
         ))
 
-    def get_current_streak(self):
+    def get_latest_streak(self, today: Optional[datetime] = datetime.today()):
         """
-        Calculates the user's most recent streak, or if their most recent performance of the habit isn't part of a
-        streak, that performance is returned as a "streak" that lasted for one period.
+        Calculates the user's current streak (i.e. relative to `today`).
         :return: A dictionary object containing the accurate start and end dates of the streak, the length of the
             streak, and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days"
             or "weeks").
@@ -188,7 +187,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
                                                                                   self.__recurrence__)
-        active_dates = sorted(activities_grouped_by_date, reverse=True) # sort from most recent performance to oldest
+        active_dates = sorted(activities_grouped_by_date, reverse=True)  # sort from most recent performance to oldest
 
         if len(active_dates) > 1:
             streak_end = active_dates[0]  # most recent performance date
@@ -213,15 +212,32 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 else:
                     # `curr_dt` has broken the streak, so the actual start of the start is the date that came before it
                     streak_start = active_dates[idx - 1]
-        else:  # only activities recorded happened in one period, so this is the beginning and the end of the streak
+        else:  # the only activities recorded happened within one period
             streak_start = active_dates[0]
             streak_end = active_dates[0]
 
-        return utils.get_streak_accurate_params(
+        streak_params = utils.get_streak_accurate_params(
             activities_grouped_by_date[streak_start],
             activities_grouped_by_date[streak_end],
             self
         )
+
+        # A date-only string for the start of the period that `today` belongs to, e.g. if we are looking at a weekly
+        # habit, the start of the period is the Monday of the week that `today` belongs to
+        today_period = utils.to_date_only_string(today) if self.__recurrence__ == "daily" \
+            else utils.to_date_only_string(utils.get_week_start_date(today))
+
+        today_is_part_of_streak = (today_period == active_dates[0])
+        today_could_increase_streak = (today_period == utils.add_interval(active_dates[0], self.__recurrence__, 1))
+
+        # A "current" streak is one that has either been continued in this period or could be extended in this period.
+        streak_params["is_current"] = today_is_part_of_streak or today_could_increase_streak
+        # If there is a streak that could be extended in this period, until when will this be possible?
+        next_period_end = utils.add_interval(streak_end, self.__recurrence__, 2)  # is a string like "2023-05-21"
+        streak_params["continuable_until"] = utils.to_datetime(f"{next_period_end} 00:00:00")\
+            if today_could_increase_streak else None
+
+        return streak_params
 
     def get_number_of_times_completed(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
         """

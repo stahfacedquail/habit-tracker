@@ -72,6 +72,20 @@ def get_week_start_date(date_a: datetime):
     return strip_out_time(date_a) - timedelta(date_a.weekday())
 
 
+def add_interval(date_a: str, interval_type: str, num_intervals: int):
+    """
+    Find the date that is a certain number of days/weeks away from a given date.
+    :param date_a: A date-only string, e.g. "2023-10-15"
+    :param interval_type: "daily" or "weekly"
+    :param num_intervals: The number of days or weeks to add (days/weeks depends on the `interval_type`)
+    :return: A date-only string for the date that is `num_intervals` days/weeks away from `date_a`
+    """
+    dt = to_datetime(f"{date_a} 00:00:00")
+    num_days_to_add = (1 if interval_type == "daily" else 7) * num_intervals
+    return_dt = dt + timedelta(num_days_to_add)
+    return to_date_only_string(return_dt)
+
+
 def group_activities_by_performance_period(activities: list[object], habit_recurrence: str,
                                            start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
     """

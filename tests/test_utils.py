@@ -95,6 +95,42 @@ class TestUtils:
         test_non_monday_dt()
         test_monday_dt()
 
+    def test_add_positive_num_of_intervals(self):
+        def test_for_day_intervals():
+            new_dt = utils.add_interval("2023-10-05", "daily", 9)
+            assert new_dt == "2023-10-14"
+
+        def test_for_week_intervals():
+            new_dt = utils.add_interval("2023-10-05", "weekly", 4)
+            assert new_dt == "2023-11-02"
+
+        test_for_day_intervals()
+        test_for_week_intervals()
+
+    def test_add_negative_num_of_intervals(self):
+        def test_for_day_intervals():
+            new_dt = utils.add_interval("2023-10-05", "daily", -9)
+            assert new_dt == "2023-09-26"
+
+        def test_for_week_intervals():
+            new_dt = utils.add_interval("2023-10-05", "weekly", -1)
+            assert new_dt == "2023-09-28"
+
+        test_for_day_intervals()
+        test_for_week_intervals()
+
+    def test_add_zero_num_of_intervals(self):
+        def test_for_day_intervals():
+            new_dt = utils.add_interval("2023-10-05", "daily", 0)
+            assert new_dt == "2023-10-05"
+
+        def test_for_week_intervals():
+            new_dt = utils.add_interval("2023-10-05", "weekly", 0)
+            assert new_dt == "2023-10-05"
+
+        test_for_day_intervals()
+        test_for_week_intervals()
+
     def test_grouping(self):
         def setup_method():
             db.connect("test.db")
