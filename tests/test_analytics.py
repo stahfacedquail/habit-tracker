@@ -174,7 +174,11 @@ class TestAnalytics:
         assert sorted_habits[2]["title"] == "Practise piano"
 
     def test_sort_on_secondary_prop_descending_order(self):
-        pass
+        habits = analytics.get_habits()
+        sorted_habits = analytics.sort_habits(habits, "desc", "completion_rate", "rate")
+        assert sorted_habits[0]["title"] == "Phone parents"
+        assert sorted_habits[1]["title"] == "Practise piano"
+        assert sorted_habits[2]["title"] == "Water plants"
 
     def test_sort_with_none_type_values(self):
         habits = analytics.get_habits()
