@@ -1,5 +1,6 @@
 import questionary
 from typing import Optional
+import sys
 import db
 from classes.habit import Habit
 from modules import habits
@@ -27,7 +28,7 @@ def show_home_menu(starting_up = False):
     elif action == "stats":
         pass
     elif action == "exit":
-        pass
+        sys.exit()
 
 
 def show_create_habit_menu(follow_up: Optional[any] = None):
@@ -65,7 +66,7 @@ def show_create_habit_follow_up_menu(habit: Habit):
     elif action == "home":
         show_home_menu()
     elif action == "exit":
-        pass
+        sys.exit()
 
 
 def perform_habit(habit: Habit, next_menu: Optional[any] = None):
@@ -89,7 +90,7 @@ def show_habits_abridged():
     if action == "home":
         show_home_menu()
     elif action == "exit":
-        pass
+        sys.exit()
     else:
         habit = Habit(action)
         show_habit_actions_menu(habit)
@@ -97,8 +98,9 @@ def show_habits_abridged():
 
 def show_habit_actions_menu(habit: Habit):
     # TODO Format dates nicely e.g. 23 December 2023
-    last_performed = habit.get_date_last_performed()
     latest_streak = habit.get_latest_streak()
+
+    last_performed = habit.get_date_last_performed()
     questionary.print(f"""
 Title: {habit.get_title()}
 Date created: {habit.get_created_at()}

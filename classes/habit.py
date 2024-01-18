@@ -191,7 +191,6 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 "end": None,
                 "unit": self.get_streak_unit(),
                 "is_current": None,
-                "continuable_until": None,
             }
 
         activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
@@ -241,10 +240,6 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         # A "current" streak is one that has either been continued in this period or could be extended in this period.
         streak_params["is_current"] = today_is_part_of_streak or today_could_increase_streak
-        # If there is a streak that could be extended in this period, until when will this be possible?
-        next_period_end = utils.add_interval(streak_end, self.__recurrence__, 2)  # is a string like "2023-05-21"
-        streak_params["continuable_until"] = utils.to_datetime(f"{next_period_end} 00:00:00")\
-            if today_could_increase_streak else None
 
         return streak_params
 
