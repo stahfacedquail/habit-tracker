@@ -11,8 +11,8 @@ def get_habits(today: Optional[datetime] = datetime.today()):
     """
     all_habits = db.get_all_habits()
 
-    def compute_properties(habit_tuple: tuple):
-        habit = Habit(habit_tuple)
+    def compute_properties(h: dict[str, tuple]):
+        habit = Habit(h)
         return {
             "title": habit.get_title(),
             "created_at": habit.get_created_at(),
@@ -39,7 +39,7 @@ def sort_habits(habits: list[dict], order: str, primary_prop: str, secondary_pro
     def sort_with_none_type(h):
         val = h[primary_prop] if secondary_prop is None else h[primary_prop][secondary_prop]
         if primary_prop == "last_performed" or (primary_prop == "latest_streak" and
-                                            (secondary_prop in ["start", "end", "is_current", "continuable_until"])):
+                                            (secondary_prop in ["start", "end", "is_current", "can_extend_today"])):
             if val is None:
                 return datetime.fromtimestamp(0)  # make it behave like the earliest value the date could be
 

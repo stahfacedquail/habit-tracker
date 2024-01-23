@@ -50,7 +50,7 @@ class TestAnalytics:
                 "length": 1,
                 "unit": "days",
                 "is_current": False,
-                "continuable_until": None,
+                "can_extend_today": False,
             },
         }
 
@@ -71,7 +71,7 @@ class TestAnalytics:
                 "length": 2,
                 "unit": "weeks",
                 "is_current": True,
-                "continuable_until": None,
+                "can_extend_today": False,
             },
         }
 
@@ -92,7 +92,7 @@ class TestAnalytics:
                 "length": 0,
                 "unit": "weeks",
                 "is_current": None,
-                "continuable_until": None,
+                "can_extend_today": None,
             },
         }
 
@@ -123,7 +123,7 @@ class TestAnalytics:
         assert latest_streak["length"] == expected_values_1["latest_streak"]["length"]
         assert latest_streak["unit"] == expected_values_1["latest_streak"]["unit"]
         assert latest_streak["is_current"] == expected_values_1["latest_streak"]["is_current"]
-        assert latest_streak["continuable_until"] == expected_values_1["latest_streak"]["continuable_until"]
+        assert latest_streak["can_extend_today"] == expected_values_1["latest_streak"]["can_extend_today"]
 
         assert habits[1]["title"] == expected_values_2["title"]
         assert habits[1]["created_at"] == expected_values_2["created_at"]
@@ -143,7 +143,7 @@ class TestAnalytics:
         assert latest_streak["length"] == expected_values_2["latest_streak"]["length"]
         assert latest_streak["unit"] == expected_values_2["latest_streak"]["unit"]
         assert latest_streak["is_current"] == expected_values_2["latest_streak"]["is_current"]
-        assert latest_streak["continuable_until"] == expected_values_2["latest_streak"]["continuable_until"]
+        assert latest_streak["can_extend_today"] == expected_values_2["latest_streak"]["can_extend_today"]
 
         assert habits[2]["title"] == expected_values_3["title"]
         assert habits[2]["created_at"] == expected_values_3["created_at"]
@@ -163,7 +163,7 @@ class TestAnalytics:
         assert latest_streak["length"] == expected_values_3["latest_streak"]["length"]
         assert latest_streak["unit"] == expected_values_3["latest_streak"]["unit"]
         assert latest_streak["is_current"] == expected_values_3["latest_streak"]["is_current"]
-        assert latest_streak["continuable_until"] == expected_values_3["latest_streak"]["continuable_until"]
+        assert latest_streak["can_extend_today"] == expected_values_3["latest_streak"]["can_extend_today"]
 
     def test_sort_on_primary_prop_ascending_order(self):
         habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))

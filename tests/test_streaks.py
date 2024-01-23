@@ -304,6 +304,7 @@ class TestLatestStreak:
         assert current_streak["length"] == 0
         assert current_streak["unit"] == "days"
         assert current_streak["is_current"] is None
+        assert current_streak["can_extend_today"] is None
 
     def test_one_period_streak(self):
         def test_for_daily_habit():
@@ -484,6 +485,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
             assert latest_streak["is_current"] is False
+            assert latest_streak["can_extend_today"] is False
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
@@ -492,6 +494,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["is_current"] is False
+            assert latest_streak["can_extend_today"] is False
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -510,6 +513,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
             assert latest_streak["is_current"] is True
+            assert latest_streak["can_extend_today"] is True
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
@@ -518,6 +522,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["is_current"] is True
+            assert latest_streak["can_extend_today"] is True
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -537,6 +542,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-31 19:12:46")
             assert latest_streak["is_current"] is True
+            assert latest_streak["can_extend_today"] is False
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:03:25")
@@ -545,6 +551,7 @@ class TestLatestStreak:
             assert latest_streak["start"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["end"] == utils.to_datetime("2023-05-29 18:15:36")
             assert latest_streak["is_current"] is True
+            assert latest_streak["can_extend_today"] is False
 
         test_for_daily_habit()
         test_for_weekly_habit()
