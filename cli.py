@@ -1,7 +1,10 @@
 import questionary
 from typing import Optional
+from tabulate import tabulate
+from datetime import datetime, timedelta
 import sys
 import db
+import utils
 from classes.habit import Habit
 from modules import habits
 
@@ -149,14 +152,141 @@ Latest streak: {streak_message}
     if action == "perform":
         perform_habit(habit, show_habits_abridged)
     elif action == "streaks":
-        pass
+        show_streaks_menu(habit)
     elif action == "completion":
-        pass
+        show_completion_rate_menu(habit)
     elif action == "delete":
         pass
     elif action == "back":
         show_habits_abridged()
     elif action == "exit":
+        sys.exit()
+
+
+def show_streaks_menu(habit: Habit):
+    sort_field = questionary.select("Sort the streaks by:", create_choices([
+        ("date", "when they started"),
+        ("length", "length"),
+    ])).ask()
+
+    sort_order = questionary.select("Start with:", create_choices([
+        ("asc", "the oldest streak" if sort_field == "date" else "the shortest streak"),
+        ("desc", "the latest streak" if sort_field == "date" else "the longest streak")
+    ])).ask()
+
+    streaks = habit.get_all_streaks(sort_field, sort_order)
+    if len(streaks) == 0:
+        questionary.print("You haven't achieved any streaks yet 🥺")
+    else:
+        streaks_table = list(map(lambda streak: [streak["length"], streak["start"], streak["end"]], streaks))
+        print(tabulate(streaks_table,
+                       headers=[f"Length ({streaks[0]['unit']})", "From", "Until"],
+                       colalign=("center",)))
+
+    follow_up_action = questionary.select("What would you like to do next?", create_choices([
+        ("change_sort", "Choose a different order to sort the streaks"),
+        ("habit_details", "Show the details of the habit"),
+        ("exit", "Exit"),
+    ])).ask()
+
+    if follow_up_action == "change_sort":
+        show_streaks_menu(habit)
+    elif follow_up_action == "habit_details":
+        show_habit_actions_menu(habit)
+    elif follow_up_action == "exit":
+        sys.exit()
+
+
+def get_custom_date(qualifying_text: str, start_date: Optional[datetime] = None):
+    dt = None
+    while dt is None:
+        date_text = questionary.text(f"Type the {qualifying_text} date in DD-MM-YYYY form (e.g. 23-05-2023):").ask()
+        if len(date_text) == 0:
+            questionary.print(f"You didn't type a {qualifying_text} date.")
+            continue
+
+        try:
+            dt = datetime.strptime(date_text, "%d-%m-%Y")
+
+            if qualifying_text == "ending" and dt < start_date:
+                dt = None
+                raise ValueError("this date comes before the starting date")
+        except ValueError as e:
+            questionary.print(f"Something doesn't quite look right: {e}.  " +
+                              "Make sure you provide a valid date, in the specified format.")
+
+    return dt
+
+
+def show_completion_rate_menu(habit: Habit):
+    date_ranges = create_choices([
+        ("last_wk", "Last week"),
+        ("last_mo", "Last month"),
+        ("custom", "Custom"),
+     ]) if habit.get_recurrence() == "daily" else create_choices([
+        ("last_mo", "Last month"),
+        ("last_6_mo", "Last 6 months"),
+        ("custom", "Custom"),
+    ])
+
+    date_range_choice = questionary.select("Which date range would you like to see your completion rate for?",
+                                           date_ranges).ask()
+
+    today = datetime.today()
+
+    if date_range_choice == "custom":
+        start_date = get_custom_date("starting")
+        end_date = get_custom_date("ending", start_date)
+    else:
+        start_date = None
+        end_date = None
+
+        if date_range_choice == "last_wk":
+            start_date = today - timedelta(days=7)
+        elif date_range_choice == "last_mo":
+            if today.month == 1:
+                start_date = datetime(today.year - 1, 12, today.day)
+            else:
+                try:
+                    start_date = datetime(today.year, today.month - 1, today.day)
+                except ValueError:
+                    start_date = datetime(today.year, today.month, 1)
+        elif date_range_choice == "last_6_mo":
+            if today.month == 6:
+                start_date = datetime(today.year - 1, 12, today.day)
+            elif today.month < 6:
+                try:
+                    start_date = datetime(today.year - 1, (today.month - 6) % 12, today.day)
+                except ValueError:
+                    start_date = datetime(today.year - 1, (today.month - 6) % 12 + 1, 1)
+            else:
+                try:
+                    start_date = datetime(today.year, today.month - 6, today.day)
+                except ValueError:
+                    start_date = datetime(today.year, (today.month - 6) + 1, 1)
+
+    if start_date is not None:
+        start_date = utils.strip_out_time(start_date)
+
+        completion = habit.get_completion_rate(start_date, end_date)
+        completion_message_intro = f"Since {start_date}, " if end_date is None \
+            else f"From {start_date} to {end_date}, "
+        completion_message = f"you have performed this habit on {completion['num_active_periods']} out of " +\
+            f"{completion['num_total_periods']} {'days' if habit.get_recurrence() == 'daily' else 'weeks'}.\n" +\
+            f"This is a completion rate of {round(100 * completion['rate'])}%."
+        questionary.print(f"{completion_message_intro}{completion_message}")
+
+    follow_up_action = questionary.select("What would you like to do next?", create_choices([
+        ("different_date_range", "View your completion rate over a different date range"),
+        ("habit_details", "Show the details of the habit"),
+        ("exit", "Exit"),
+    ])).ask()
+
+    if follow_up_action == "different_date_range":
+        show_completion_rate_menu(habit)
+    elif follow_up_action == "habit_details":
+        show_habit_actions_menu(habit)
+    elif follow_up_action == "exit":
         sys.exit()
 
 

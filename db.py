@@ -171,6 +171,5 @@ def get_all_habits_abridged():
     cur = db_connection.cursor()
     cur.execute("SELECT uuid, title FROM habits")
     habits = cur.fetchall()
-    print(len(habits))
     return habits
 
