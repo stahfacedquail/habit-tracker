@@ -156,7 +156,7 @@ Latest streak: {streak_message}
     elif action == "completion":
         show_completion_rate_menu(habit)
     elif action == "delete":
-        pass
+        show_delete_habit_menu(habit)
     elif action == "back":
         show_habits_abridged()
     elif action == "exit":
@@ -288,6 +288,28 @@ def show_completion_rate_menu(habit: Habit):
         show_habit_actions_menu(habit)
     elif follow_up_action == "exit":
         sys.exit()
+
+
+def show_delete_habit_menu(habit: Habit):
+    confirm_delete = questionary.confirm("Are you sure you want to delete this habit?").ask()
+    if confirm_delete:
+        habit.remove()
+        questionary.print("The habit was successfully deleted.", style="fg:lime")
+
+        follow_up_action = questionary.select("What would you like to do next?", create_choices([
+            ("habits_list", "Go back to the list of all your habits"),
+            ("home", "Go back home"),
+            ("exit", "Exit"),
+        ])).ask()
+
+        if follow_up_action == "home":
+            show_home_menu()
+        elif follow_up_action == "habits_list":
+            show_habits_abridged()
+        elif follow_up_action == "exit":
+            sys.exit()
+    else:
+        show_habit_actions_menu(habit)
 
 
 db.connect()
