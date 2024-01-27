@@ -29,7 +29,7 @@ def show_home_menu(starting_up = False):
     elif action == "show_one":
         show_habits_abridged()
     elif action == "stats":
-        pass
+        show_select_columns_menu()
     elif action == "exit":
         sys.exit()
 
@@ -310,6 +310,19 @@ def show_delete_habit_menu(habit: Habit):
             sys.exit()
     else:
         show_habit_actions_menu(habit)
+
+
+def show_select_columns_menu():
+    columns = questionary.checkbox("Choose the details you would like to see:", create_choices([
+        ("created_at", "Date the habit was created"),
+        ("recurrence", "How often the habit should be performed"),
+        ("last_performed", "When last the habit was performed"),
+        ("num_periods_performed", "How many days/weeks the habit has been performed"),
+        ("completion_rate", "How successfully you have completed the habit since creating it"),
+        ("latest_streak", "Your longest streak to date"),
+    ])).ask()
+
+    print(columns)
 
 
 db.connect()
