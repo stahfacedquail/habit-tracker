@@ -1,8 +1,12 @@
-import questionary
-from typing import Optional
-from tabulate import tabulate
-from datetime import datetime, timedelta
 import sys
+from datetime import datetime, timedelta
+from typing import Optional
+from functools import reduce
+
+import questionary
+from tabulate import tabulate
+
+import analytics
 import db
 import utils
 from classes.habit import Habit
@@ -29,7 +33,8 @@ def show_home_menu(starting_up = False):
     elif action == "show_one":
         show_habits_abridged()
     elif action == "stats":
-        show_select_columns_menu()
+        chosen_cols = show_select_columns_menu()
+        present_stats_options(chosen_cols)
     elif action == "exit":
         sys.exit()
 
@@ -319,10 +324,101 @@ def show_select_columns_menu():
         ("last_performed", "When last the habit was performed"),
         ("num_periods_performed", "How many days/weeks the habit has been performed"),
         ("completion_rate", "How successfully you have completed the habit since creating it"),
-        ("latest_streak", "Your longest streak to date"),
+        ("latest_streak", "The length of your latest streak"),
     ])).ask()
 
-    print(columns)
+    return ["title"] + columns
+
+
+def present_stats_options(columns: list[str]):
+    full_habits_list = analytics.get_habits()
+    modified_list = []
+
+    fields = {
+        "title": {
+            "label": "Title",
+            "asc": "A",
+            "desc": "Z",
+        },
+        "created_at": {
+            "label": "Created at",
+            "asc": "the oldest habit",
+            "desc": "the newest habit",
+        },
+        "recurrence": {
+            "label": "Recurs"
+        },
+        "last_performed": {
+            "label": "Last performed",
+            "asc": "the habit performed least recently",
+            "desc": "the habit performed most recently"
+        },
+        "num_periods_performed": {
+            "label": "# days/weeks performed",
+            "asc": "the habit performed on the fewest days/weeks",
+            "desc": "the habit performed on the most days/weeks",
+        },
+        "completion_rate": {
+            "label": "Completion (%)",
+            "asc": "the habit completed least successfully",
+            "desc": "the habit completed most successfully"
+        },
+        "latest_streak": {
+            "label": "Latest streak",
+            "asc": "the habit with the shortest streak",
+            "desc": "the habit with the longest streak",
+        },
+    }
+
+    choice = "start"
+
+    while choice is not None:
+        filtered_headers = list(map(lambda key: fields[key]["label"], columns))
+
+        if choice == "start":
+            modified_list = []
+            for habit in full_habits_list:
+                stats = {}
+                for col in columns:
+                    stats[col] = habit[col]
+                modified_list.append(stats)
+        elif choice == "columns":
+            columns = show_select_columns_menu()
+        elif choice == "sort":
+            sort_columns = {
+                key: props  # duplicate what's in the `fields` dictionary
+                for (key, props) in fields.items()
+                # only keep the columns that are visible and that are sortable on
+                if key in columns and "asc" in fields[key]
+            }
+            sort_field = questionary.select("Which column would you like to sort on?", create_choices(
+                [(key, sort_columns[key]["label"]) for key in sort_columns.keys()]
+            )).ask()
+            sort_order = questionary.select("Start from...", create_choices([
+                ("asc", sort_columns[sort_field]["asc"]),
+                ("desc", sort_columns[sort_field]["desc"]),
+            ])).ask()
+            print(sort_field, sort_order)
+            modified_list = analytics.sort_habits(modified_list, sort_field, sort_order)
+        elif choice == "home":
+            show_home_menu()
+            break
+        elif choice == "exit":
+            sys.exit()
+
+        print(tabulate(map(
+            lambda h: [value for (key, value) in h.items()],
+            modified_list
+        ), headers=filtered_headers))
+
+        choice = questionary.select("What would you like to do next?", create_choices([
+            ("columns", "Modify the columns"),
+            ("filter", "Apply a filter"),
+            ("sort", "Modify the sort order"),
+            ("home", "Go back home"),
+            ("exit", "Exit"),
+        ])).ask()
+
 
 
 db.connect()

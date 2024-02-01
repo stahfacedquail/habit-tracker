@@ -19,29 +19,29 @@ def get_habits(today: Optional[datetime] = datetime.today()):
             "recurrence": habit.get_recurrence(),
             "last_performed": habit.get_date_last_performed(),
             "num_periods_performed": habit.get_number_of_times_completed(end_date=today),
-            "completion_rate": habit.get_completion_rate(end_date=today),
-            "latest_streak": habit.get_latest_streak(today),
+            "completion_rate": round(100 * habit.get_completion_rate(end_date=today)["rate"]),
+            "latest_streak": habit.get_latest_streak(today)["length"],
         }
 
     return list(map(compute_properties, all_habits))
 
 
-def sort_habits(habits: list[dict], order: str, primary_prop: str, secondary_prop: Optional[str] = None):
+def sort_habits(habits: list[dict], sort_field: str, order: str):
     """
     Sort the list of habit tuples.
     :param habits: A list of tuples each containing details about a habit
-    :param primary_prop: The property by which to sort the list, e.g. "completion_rate"
-    :param secondary_prop: Sometimes there is more than one way to sort on `primary_prop`, e.g. for "current_streak",
-        one can sort by length of the streak or by date.
+    :param sort_field: The property by which to sort the list, e.g. "completion_rate"
     :param order: "asc" or "desc", i.e. whether to sort by ascending or descending order
     :return: A new list of habit dictionary objects, sorted as requested
     """
     def sort_with_none_type(h):
-        val = h[primary_prop] if secondary_prop is None else h[primary_prop][secondary_prop]
-        if primary_prop == "last_performed" or (primary_prop == "latest_streak" and
-                                            (secondary_prop in ["start", "end", "is_current", "can_extend_today"])):
+        val = h[sort_field]
+        if sort_field == "last_performed":
             if val is None:
                 return datetime.fromtimestamp(0)  # make it behave like the earliest value the date could be
+
+        if isinstance(val, str):  # case-insensitive sorting for string fields
+            return val.lower()
 
         return val
 
