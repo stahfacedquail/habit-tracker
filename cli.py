@@ -350,11 +350,10 @@ def show_stats_menu():
         },
         "recurrence": {
             "label": "Recurs",
-            "filters": [
-                ("none", "Remove the filter"),
-                ("daily", "Show the daily habits"),
-                ("weekly", "Show the weekly habits"),
-            ],
+            "filters": {
+                "options": [ "Remove the filter", "Show the daily habits", "Show the weekly habits" ],
+                "current": 0,  # show unfiltered by default
+            },
         },
         "last_performed": {
             "label": "Last performed",
@@ -417,7 +416,21 @@ def show_stats_menu():
             ])).ask()
             modified_list = analytics.sort_habits(modified_list, sort_field, sort_order)
         elif choice == "filter":
-            pass
+            filter_columns = {
+                key: props  # duplicate what's in the `fields` dictionary
+                for (key, props) in fields.items()
+                if "filters" in fields[key]  # only keep the fields that can be filtered on
+            }
+            filter_field = questionary.select("Which field would you like to filter on?", create_choices([
+                (key, props["label"]) for (key, props) in filter_columns.items()
+            ])).ask()
+            filter_option = questionary.select("How would you like to update this filter?", create_choices([
+                (idx, label)
+                for (idx, label)
+                in enumerate(filter_columns[filter_field]["filters"]["options"])
+                if idx != filter_columns[filter_field]["filters"]["current"]
+            ])).ask()
+            # TODO: Extract these bits of logics into functions so that the processing can be reused
         elif choice == "home":
             show_home_menu()
             break
@@ -430,9 +443,9 @@ def show_stats_menu():
         ), headers=filtered_headers))
 
         choice = questionary.select("What would you like to do next?", create_choices([
-            ("columns", "Modify the columns"),
-            ("filter", "Apply a filter"),
-            ("sort", "Modify the sort order"),
+            ("columns", "Change the columns"),
+            ("filter", "Change a filter"),
+            ("sort", "Change the sort order"),
             ("home", "Go back home"),
             ("exit", "Exit"),
         ])).ask()
