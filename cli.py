@@ -33,8 +33,7 @@ def show_home_menu(starting_up = False):
     elif action == "show_one":
         show_habits_abridged()
     elif action == "stats":
-        chosen_cols = show_select_columns_menu()
-        present_stats_options(chosen_cols)
+        show_stats_menu()
     elif action == "exit":
         sys.exit()
 
@@ -330,76 +329,95 @@ def show_select_columns_menu():
     return ["title"] + columns
 
 
-def present_stats_options(columns: list[str]):
+def show_stats_menu():
     full_habits_list = analytics.get_habits()
     modified_list = []
 
     fields = {
         "title": {
             "label": "Title",
-            "asc": "A",
-            "desc": "Z",
+            "sort_options": {
+                "asc": "A",
+                "desc": "Z",
+            },
         },
         "created_at": {
             "label": "Created at",
-            "asc": "the oldest habit",
-            "desc": "the newest habit",
+            "sort_options": {
+                "asc": "the oldest habit",
+                "desc": "the newest habit",
+            },
         },
         "recurrence": {
-            "label": "Recurs"
+            "label": "Recurs",
+            "filters": [
+                ("none", "Remove the filter"),
+                ("daily", "Show the daily habits"),
+                ("weekly", "Show the weekly habits"),
+            ],
         },
         "last_performed": {
             "label": "Last performed",
-            "asc": "the habit performed least recently",
-            "desc": "the habit performed most recently"
+            "sort_options": {
+                "asc": "the habit performed least recently",
+                "desc": "the habit performed most recently"
+            },
         },
         "num_periods_performed": {
             "label": "# days/weeks performed",
-            "asc": "the habit performed on the fewest days/weeks",
-            "desc": "the habit performed on the most days/weeks",
+            "sort_options": {
+                "asc": "the habit performed on the fewest days/weeks",
+                "desc": "the habit performed on the most days/weeks",
+            },
         },
         "completion_rate": {
             "label": "Completion (%)",
-            "asc": "the habit completed least successfully",
-            "desc": "the habit completed most successfully"
+            "sort_options": {
+                "asc": "the habit completed least successfully",
+                "desc": "the habit completed most successfully"
+            },
         },
         "latest_streak": {
             "label": "Latest streak",
-            "asc": "the habit with the shortest streak",
-            "desc": "the habit with the longest streak",
+            "sort_options": {
+                "asc": "the habit with the shortest streak",
+                "desc": "the habit with the longest streak",
+            },
         },
     }
 
-    choice = "start"
+    choice = "columns"
+    columns = []
+    filtered_headers = []
 
     while choice is not None:
-        filtered_headers = list(map(lambda key: fields[key]["label"], columns))
+        if choice == "columns":
+            columns = show_select_columns_menu()
+            filtered_headers = list(map(lambda key: fields[key]["label"], columns))
 
-        if choice == "start":
             modified_list = []
             for habit in full_habits_list:
                 stats = {}
                 for col in columns:
                     stats[col] = habit[col]
                 modified_list.append(stats)
-        elif choice == "columns":
-            columns = show_select_columns_menu()
         elif choice == "sort":
             sort_columns = {
                 key: props  # duplicate what's in the `fields` dictionary
                 for (key, props) in fields.items()
                 # only keep the columns that are visible and that are sortable on
-                if key in columns and "asc" in fields[key]
+                if key in columns and "sort_options" in fields[key]
             }
             sort_field = questionary.select("Which column would you like to sort on?", create_choices(
                 [(key, sort_columns[key]["label"]) for key in sort_columns.keys()]
             )).ask()
             sort_order = questionary.select("Start from...", create_choices([
-                ("asc", sort_columns[sort_field]["asc"]),
-                ("desc", sort_columns[sort_field]["desc"]),
+                ("asc", sort_columns[sort_field]["sort_options"]["asc"]),
+                ("desc", sort_columns[sort_field]["sort_options"]["desc"]),
             ])).ask()
-            print(sort_field, sort_order)
             modified_list = analytics.sort_habits(modified_list, sort_field, sort_order)
+        elif choice == "filter":
+            pass
         elif choice == "home":
             show_home_menu()
             break
