@@ -29,12 +29,10 @@ class TestStreaksForDailyHabits:
         assert streak_1["start"] == utils.to_datetime("2023-06-02 19:29:09")
         assert streak_1["end"] == utils.to_datetime("2023-06-08 18:53:14")
         assert streak_1["length"] == 7
-        assert streak_1["unit"] == "days"
         streak_2 = streaks[1]
         assert streak_2["start"] == utils.to_datetime("2023-05-28 18:15:55")
         assert streak_2["end"] == utils.to_datetime("2023-05-30 16:57:59")
         assert streak_2["length"] == 3
-        assert streak_2["unit"] == "days"
 
     def test_streak_at_end_of_list(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 18:15:43")
@@ -101,12 +99,10 @@ class TestStreaksForDailyHabits:
         assert streak_1["start"] == utils.to_datetime("2023-05-29 11:23:45")
         assert streak_1["end"] == utils.to_datetime("2023-05-30 08:17:54")
         assert streak_1["length"] == 2
-        assert streak_1["unit"] == "days"
         streak_2 = streaks[1]
         assert streak_2["start"] == utils.to_datetime("2023-06-17 17:18:19")
         assert streak_2["end"] == utils.to_datetime("2023-06-20 11:15:43")
         assert streak_2["length"] == 4
-        assert streak_2["unit"] == "days"
 
     def test_sorting_on_length_descending(self):
         habit = Habit("Phone parents", "weekly", "2023-05-28 19:00:43")
@@ -122,12 +118,10 @@ class TestStreaksForDailyHabits:
         assert streak_1["start"] == utils.to_datetime("2023-06-27 17:18:19")
         assert streak_1["end"] == utils.to_datetime("2023-07-11 11:15:43")
         assert streak_1["length"] == 3
-        assert streak_1["unit"] == "weeks"
         streak_2 = streaks[1]
         assert streak_2["start"] == utils.to_datetime("2023-05-29 11:23:45")
         assert streak_2["end"] == utils.to_datetime("2023-06-06 08:17:54")
         assert streak_2["length"] == 2
-        assert streak_2["unit"] == "weeks"
 
     def teardown_method(self):
         db.remove_tables()
@@ -164,7 +158,6 @@ class TestStreaksForWeeklyHabits:
         assert streak_1["start"] == utils.to_datetime("2023-12-27 16:46:09")
         assert streak_1["end"] == utils.to_datetime("2024-01-21 19:22:15")
         assert streak_1["length"] == 4
-        assert streak_1["unit"] == "weeks"
 
     # 2. test more than one streak in list
     def test_multiple_streaks(self):
@@ -302,7 +295,6 @@ class TestLatestStreak:
         assert current_streak["start"] is None
         assert current_streak["end"] is None
         assert current_streak["length"] == 0
-        assert current_streak["unit"] == "days"
         assert current_streak["is_current"] is None
         assert current_streak["can_extend_today"] is None
 
@@ -317,7 +309,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-17 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-17 00:55:21")
             assert current_streak["length"] == 1
-            assert current_streak["unit"] == "days"
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 09:21:57")
@@ -329,7 +320,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-28 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-28 00:55:21")
             assert current_streak["length"] == 1
-            assert current_streak["unit"] == "weeks"
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -345,7 +335,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-05-31 17:00:34")
             assert current_streak["length"] == 1
-            assert current_streak["unit"] == "days"
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
@@ -358,7 +347,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-04 17:00:34")
             assert current_streak["length"] == 1
-            assert current_streak["unit"] == "weeks"
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -374,7 +362,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-02 17:00:34")
             assert current_streak["length"] == 3
-            assert current_streak["unit"] == "days"
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
@@ -386,7 +373,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-05-31 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-06-12 17:00:34")
             assert current_streak["length"] == 3
-            assert current_streak["unit"] == "weeks"
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -412,7 +398,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-15 00:19:04")
             assert current_streak["end"] == utils.to_datetime("2023-06-17 23:36:26")
             assert current_streak["length"] == 3
-            assert current_streak["unit"] == "days"
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
@@ -433,7 +418,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-30 14:18:32")
             assert current_streak["end"] == utils.to_datetime("2023-07-10 22:11:33")
             assert current_streak["length"] == 3
-            assert current_streak["unit"] == "weeks"
 
         test_for_daily_habit()
         test_for_weekly_habit()
@@ -453,7 +437,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-22 16:03:57")
             assert current_streak["end"] == utils.to_datetime("2023-06-22 16:03:57")
             assert current_streak["length"] == 1
-            assert current_streak["unit"] == "days"
 
         def test_for_weekly_habit():
             habit = Habit("Phone parents", "weekly", "2023-05-28 19:21:57")
@@ -467,7 +450,6 @@ class TestLatestStreak:
             assert current_streak["start"] == utils.to_datetime("2023-06-30 00:55:21")
             assert current_streak["end"] == utils.to_datetime("2023-07-06 11:17:49")
             assert current_streak["length"] == 2
-            assert current_streak["unit"] == "weeks"
 
         test_for_daily_habit()
         test_for_weekly_habit()

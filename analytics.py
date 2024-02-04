@@ -48,11 +48,11 @@ def sort_habits(habits: list[dict], sort_field: str, order: str):
     return sorted(habits, key=sort_with_none_type, reverse=(order == "desc"))
 
 
-def filter_habits(habits: list[tuple], prop: str, value: any):
+def filter_habits(habits: list[dict], prop: str, value: any):
     """
-    Show a subset of the list of habit tuples, filtered by a particular property.
-    :param habits: A list of tuples each containing details about a habit
-    :param prop: The property by which to filter the list.  Currently only available property is "recurrence_type".
+    Show a subset of the list of habit dictionary objects, filtered by a particular property.
+    :param habits: A list of dictionary objects each containing details about a habit
+    :param prop: The property by which to filter the list.  Currently only available property is "recurrence".
     :param value: Only display habits whose value for the requested `prop` is `value`
     :return: A new list of habit dictionary objects, filtered as requested
     """

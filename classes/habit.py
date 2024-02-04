@@ -54,9 +54,6 @@ class Habit:
     def get_activities(self):
         return self.__activities__
 
-    def get_streak_unit(self):
-        return "days" if self.__recurrence__ == "daily" else "weeks"
-
     def __str__(self):
         return f"""Title: {self.__title__}
 Recurs: {self.__recurrence__}
@@ -111,8 +108,8 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         Determine the date ranges for which activities were recorded for 2 or more consecutive periods (days/weeks).
         :param sort_by: "date" or "length", i.e. should the streaks be sorted by date or by length?
         :param sort_order: "asc" or "desc"
-        :return: A list of dictionary objects, where each object has the start date and end date of the streak,
-            the length of the streak, and the unit of measurement for the length of the streak (i.e. "days" or "weeks")
+        :return: A list of dictionary objects, where each object has the start date and end date of the streak, and
+            the length of the streak
         """
         # 1. Group the activities by period (day/week performed)
         dict_activities_per_period = utils.group_activities_by_performance_period(
@@ -179,9 +176,8 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
     def get_latest_streak(self, today: Optional[datetime] = datetime.today()):
         """
         Calculates the user's current streak (i.e. relative to `today`).
-        :return: A dictionary object containing the accurate start and end dates of the streak, the length of the
-            streak, and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days"
-            or "weeks").
+        :return: A dictionary object containing the accurate start and end dates of the streak, and the length of the
+            streak.
         """
 
         if len(self.__activities__) == 0:
@@ -189,7 +185,6 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 "length": 0,
                 "start": None,
                 "end": None,
-                "unit": self.get_streak_unit(),
                 "is_current": None,
                 "can_extend_today": None,
             }
@@ -281,3 +276,8 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
     def remove(self):
         delete_habit(self.__uuid__)
+
+    def get_interval(self, count: int = 1):
+        interval = "day" if self.get_recurrence() == "daily" else "week"
+        plural_suffix = "s" if count != 1 else ""
+        return f"{interval}{plural_suffix}"

@@ -138,8 +138,7 @@ def get_streak_accurate_params(start_date_activities: str, end_date_activities: 
     :param start_date_activities: A date-only string, e.g. "2023-01-24"
     :param end_date_activities: A date-only string, e.g. "2023-01-31"
     :param habit: The Habit model to whom the activities belong
-    :return: A dictionary object containing the accurate start and end dates of the streak, the length of the streak,
-        and the unit of measurement for the streak based on the habit's recurrence type (i.e. either "days" or "weeks").
+    :return: A dictionary object containing the accurate start and end dates of the streak, and the length of the streak
     """
     first_activity = sorted(start_date_activities, key=lambda activity: activity.get_performed_at())[0]
     last_activity = sorted(end_date_activities, key=lambda activity: activity.get_performed_at())[-1]
@@ -152,5 +151,58 @@ def get_streak_accurate_params(start_date_activities: str, end_date_activities: 
         "start": accurate_start,
         "end": accurate_end,
         "length": length,
-        "unit": habit.get_streak_unit()
     }
+
+
+def get_last_week_date_range(end_date: Optional[datetime] = None):
+    if end_date is None:
+        end_date = datetime.today()
+    start_date = end_date - timedelta(days=6)  # minus 6 and not 7 because range includes today
+    return strip_out_time(start_date), end_date
+
+
+def get_last_month_date_range(end_date: Optional[datetime] = None):
+    if end_date is None:
+        end_date = datetime.today()
+
+    if end_date.month == 1:
+        if end_date.day == 31:  # One month back from 31 Jan must be 1 Jan
+            start_date = datetime(end_date.year, 1, 1)
+        else:  # One month back from any other date in Jan is the (same date + 1) in December, e.g. one month back from
+            # 18 January 2023 is 19 December 2023
+            start_date = datetime(end_date.year - 1, 12, end_date.day + 1)
+    else:
+        try:
+            # Try to get (end date + 1) in the previous month...  e.g. if end_date is 15 March 2023, then start_date
+            # should be 16 February 2023
+            start_date = datetime(end_date.year, end_date.month - 1, end_date.day + 1)
+        except ValueError:
+            # If it's out of range for previous month, then just begin the range with the 1st day of the end month
+            # e.g. If end_date is 30 March 2023, one month before that is "31 February 2023", so just make 1 March 2023
+            # the beginning of the range
+            start_date = datetime(end_date.year, end_date.month, 1)
+
+    return start_date, end_date
+
+
+def get_last_6_months_date_range(end_date: Optional[datetime] = None):
+    if end_date is None:
+        end_date = datetime.today()
+
+    if end_date.month == 6:  # e.g. If end_date is 18 June 2024, start_date should be 19 December 2023
+        start_date = datetime(end_date.year - 1, 12, end_date.day + 1)
+    elif end_date.month < 6:  # Six months ago will take us to the previous year
+        try:
+            # e.g. (2 - 6) % 12 == (-4) % 12 == 8, so 6 months back from Feb (month 2) lands us in August (month 8)
+            # of the previous year
+            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12, end_date.day + 1)
+        except ValueError:
+            # If the day is out of range for that month, just start the period at the beginning of the following month
+            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12 + 1, 1)
+    else:  # Six months ago lands us within the same year as end_date
+        try:
+            start_date = datetime(end_date.year, end_date.month - 6, end_date.day + 1)
+        except ValueError:
+            start_date = datetime(end_date.year, (end_date.month - 6) + 1, 1)
+
+    return start_date, end_date

@@ -213,7 +213,62 @@ class TestUtils:
         assert params["start"] == utils.to_datetime("2023-09-18 16:20:30")
         assert params["end"] == utils.to_datetime("2023-09-27 20:57:17")
         assert params["length"] == 2
-        assert params["unit"] == "weeks"
 
         teardown_method()
+
+    def test_get_last_week_date_range(self):
+        (start, end) = utils.get_last_week_date_range(datetime(2024, 1, 3, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2023-12-28 00:00:00"
+        assert end_text == "2024-01-03 14:53:21"
+
+    def test_get_last_month_date_range_straightforward(self):
+        (start, end) = utils.get_last_month_date_range(datetime(2024, 3, 28, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2024-02-29 00:00:00"
+        assert end_text == "2024-03-28 14:53:21"
+
+    def test_get_last_month_date_range_previous_year(self):
+        (start, end) = utils.get_last_month_date_range(datetime(2024, 1, 3, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2023-12-04 00:00:00"
+        assert end_text == "2024-01-03 14:53:21"
+
+    def test_get_last_month_date_range_special_january_case(self):
+        (start, end) = utils.get_last_month_date_range(datetime(2024, 1, 31, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2024-01-01 00:00:00"
+        assert end_text == "2024-01-31 14:53:21"
+
+    def test_get_last_month_date_range_longer_month(self):
+        (start, end) = utils.get_last_month_date_range(datetime(2024, 3, 30, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2024-03-01 00:00:00"
+        assert end_text == "2024-03-30 14:53:21"
+
+    def test_get_last_6_months_date_range_straightforward(self):
+        (start, end) = utils.get_last_6_months_date_range(datetime(2024, 10, 3, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2024-04-04 00:00:00"
+        assert end_text == "2024-10-03 14:53:21"
+
+    def test_get_last_6_months_date_range_previous_year(self):
+        (start, end) = utils.get_last_6_months_date_range(datetime(2024, 4, 3, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2023-10-04 00:00:00"
+        assert end_text == "2024-04-03 14:53:21"
+
+    def test_get_last_6_months_date_range_longer_month(self):
+        (start, end) = utils.get_last_6_months_date_range(datetime(2024, 8, 29, 14, 53, 21))
+        start_text = datetime.strftime(start, "%Y-%m-%d %H:%M:%S")
+        end_text = datetime.strftime(end, "%Y-%m-%d %H:%M:%S")
+        assert start_text == "2024-03-01 00:00:00"
+        assert end_text == "2024-08-29 14:53:21"
 
