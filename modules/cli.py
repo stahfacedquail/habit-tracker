@@ -14,6 +14,7 @@ from classes.habit import Habit
 # TODO: Instead of just sys.exit, show a nice goodbye message then exit
 # TODO: Headings to show where in the program the user is
 # TODO: Display for correct timezone
+# TODO: Alignment in tables (especially stats one) -- field-dependent
 
 def create_choices(options: list[tuple], pre_selections: Optional[list[str]] = None):
     """
