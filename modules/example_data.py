@@ -1,5 +1,8 @@
 from modules.utils import make_uuid
 
+
+# TODO: Less activity data so that it's easier to see what's going on
+
 habits = [
     (make_uuid(), "Jog", "daily", "2023-09-13 22:55:30"),
     (make_uuid(), "Phone parents", "weekly", "2023-01-29 12:01:17"),
