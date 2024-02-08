@@ -14,6 +14,7 @@ from classes.habit import Habit
 # TODO: Tabs to align
 # TODO: "1 days" vs "1 day"
 # TODO: Instead of just sys.exit, show a nice goodbye message then exit
+# TODO: Headings to show where in the program the user is
 
 def create_choices(options: list[tuple]):
     """
