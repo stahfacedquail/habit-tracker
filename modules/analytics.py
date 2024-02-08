@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-import db
+from modules import db
 from classes.habit import Habit
 
 

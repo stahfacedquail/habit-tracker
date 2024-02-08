@@ -1,6 +1,6 @@
 import sqlite3
-import data
-from utils import make_uuid
+from modules import example_data
+from modules.utils import make_uuid
 
 # global database connection for the application
 db_connection = None
@@ -64,12 +64,12 @@ def populate_starter_data():
 
     cur.executemany("""
             INSERT INTO habits VALUES (?, ?, ?, ?)
-        """, data.predefined_habits)
+        """, example_data.habits)
     db_connection.commit()
 
     cur.executemany("""
             INSERT INTO activities VALUES(?, ?, ?)
-        """, data.predefined_activities)
+        """, example_data.activities)
     db_connection.commit()
 
 

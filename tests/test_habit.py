@@ -1,7 +1,5 @@
-import pytest
 from datetime import date
-import db
-import utils
+from modules import db, utils
 from classes.habit import Habit
 
 

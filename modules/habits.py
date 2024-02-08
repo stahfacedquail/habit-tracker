@@ -1,4 +1,4 @@
-import db
+from modules import db
 
 
 def get_habits_abridged():

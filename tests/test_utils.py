@@ -1,5 +1,4 @@
-import db
-import utils
+from modules import db, utils
 from datetime import datetime
 from classes.habit import Habit
 
@@ -198,12 +197,12 @@ class TestUtils:
         habit.perform("2023-09-27 20:57:17")
         week_1_activities = list(filter(
             lambda activity: utils.to_datetime("2023-09-18 00:00:00")
-            <= activity.get_performed_at()
-            < utils.to_datetime("2023-09-25 00:00:00"), habit.get_activities()))
+                             <= activity.get_performed_at()
+                             < utils.to_datetime("2023-09-25 00:00:00"), habit.get_activities()))
         week_2_activities = list(filter(
             lambda activity: utils.to_datetime("2023-09-25 00:00:00")
-            <= activity.get_performed_at()
-            < utils.to_datetime("2023-10-02 00:00:00"), habit.get_activities()))
+                             <= activity.get_performed_at()
+                             < utils.to_datetime("2023-10-02 00:00:00"), habit.get_activities()))
         params = utils.get_streak_accurate_params(
             week_1_activities,
             week_2_activities,

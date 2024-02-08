@@ -1,7 +1,5 @@
 from datetime import datetime
-import analytics
-import db
-import utils
+from modules import db, utils, analytics
 from classes.habit import Habit
 
 

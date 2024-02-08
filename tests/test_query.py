@@ -1,4 +1,4 @@
-import db
+from modules import db
 from classes.habit import Habit
 
 

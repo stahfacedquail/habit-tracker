@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
-import db
-import utils
+from modules import db, utils
 from classes.habit import Habit
 
 

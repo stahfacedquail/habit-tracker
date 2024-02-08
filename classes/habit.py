@@ -1,8 +1,8 @@
 from datetime import datetime
 from multimethod import multimethod
 from typing import Union, Optional
-from db import create_habit, get_habit, delete_habit
-import utils
+from modules.db import create_habit, get_habit, delete_habit
+from modules import utils
 from classes.activity import Activity
 
 

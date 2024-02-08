@@ -1,16 +1,12 @@
 import sys
-import copy
 from datetime import datetime
 from typing import Optional
 
 import questionary
 from tabulate import tabulate
 
-import analytics
-import db
-import utils
+from modules import habits, utils, analytics
 from classes.habit import Habit
-from modules import habits
 
 
 # TODO: Pause between actions to let user first digest outcome, and then choose next action
@@ -314,6 +310,8 @@ def show_completion_rate_menu(habit: Habit):
         else:
             (start_date, end_date) = utils.get_last_6_months_date_range()
 
+    # Cap the date range so that it does not go beyond the date when the habit was created
+    start_date = max(start_date, habit.get_created_at())
     completion = habit.get_completion_rate(start_date, end_date)
 
     completion_message_intro = f"From {start_date} to {end_date},"
@@ -565,7 +563,3 @@ def show_stats_menu():
             ("home", "Go back home"),
             ("exit", "Exit"),
         ])).ask()
-
-
-db.connect()
-show_home_menu(True)

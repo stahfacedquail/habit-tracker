@@ -1,7 +1,7 @@
 from multimethod import multimethod
 from typing import Optional
-from db import create_activity
-import utils
+from modules.db import create_activity
+from modules import utils
 
 
 class Activity:
