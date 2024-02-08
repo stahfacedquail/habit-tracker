@@ -11,8 +11,6 @@ from classes.habit import Habit
 
 # TODO: Pause between actions to let user first digest outcome, and then choose next action
 # TODO: Format dates nicely e.g. 23 December 2023
-# TODO: Tabs to align
-# TODO: "1 days" vs "1 day"
 # TODO: Instead of just sys.exit, show a nice goodbye message then exit
 # TODO: Headings to show where in the program the user is
 
