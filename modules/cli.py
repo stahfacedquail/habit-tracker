@@ -13,15 +13,24 @@ from classes.habit import Habit
 # TODO: Format dates nicely e.g. 23 December 2023
 # TODO: Instead of just sys.exit, show a nice goodbye message then exit
 # TODO: Headings to show where in the program the user is
+# TODO: Display for correct timezone
 
-def create_choices(options: list[tuple]):
+def create_choices(options: list[tuple], pre_selections: Optional[list[str]] = None):
     """
     Utility function to take a list of tuples and convert them to questionary Choice objects
     :param options: A list of tuples where each tuple has a key (the code for a user's action) and a label (the
     human-friendly text that will be displayed to the user to select this option), e.g. ("exit", "Exit the program")
+    :param pre_selections: A list of the values that should be pre-selected
     :return: A list of questionary Choice objects corresponding to the input list of options
     """
-    return list(map(lambda opt: questionary.Choice(value=opt[0], title=opt[1]), options))
+    if pre_selections is None:
+        choices = list(map(lambda opt: questionary.Choice(value=opt[0], title=opt[1]), options))
+    else:
+        choices = list(map(lambda opt: questionary.Choice(
+            value=opt[0], title=opt[1], checked=(opt[0] in pre_selections)
+        ), options))
+
+    return choices
 
 
 def show_home_menu(starting_up=False):
@@ -359,7 +368,7 @@ def show_delete_habit_menu(habit: Habit):
         show_habit_actions_menu(habit)
 
 
-def show_select_columns_menu():
+def show_select_columns_menu(pre_selected_columns: Optional[list[str]] = None):
     """
     Let the user decide which properties they want to view in the full list of their habits
     :return: The list of properties the user would like to view, where "title" is always included
@@ -371,7 +380,7 @@ def show_select_columns_menu():
         ("num_periods_performed", "How many days/weeks the habit has been performed"),
         ("completion_rate", "How successfully you have completed the habit since creating it"),
         ("latest_streak", "The length of your latest streak"),
-    ])).ask()
+    ], pre_selected_columns)).ask()
 
     return ["title"] + columns
 
@@ -495,7 +504,7 @@ def show_stats_menu():
     # Should user be able to sort on column that isn't visible??  Good UX for selecting different columns... reset sort?
     while action is not None:
         if action == "columns":
-            columns = show_select_columns_menu()
+            columns = show_select_columns_menu(columns if len(columns) > 0 else None)
             filtered_headers = list(map(lambda column: stats_fields[column]["label"], columns))
             # Show only desired columns
             modified_habits_list = get_requested_habit_properties(full_habits_list, columns)
