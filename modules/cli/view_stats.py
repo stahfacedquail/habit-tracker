@@ -121,6 +121,40 @@ def get_filterable_columns():
     }
 
 
+def apply_modifications(
+        full_habits_list: list,
+        columns: list[str],
+        sort_opts: tuple[str | None, str],
+        filter_opts: tuple[str | None, str]
+):
+    """
+    Utility function to apply the user's column selection, their filter (if any) and their sorting (if any) to their
+    full list of habits.
+    :param full_habits_list: The list of the user's habits (from the analytics module)
+    :param columns: A list of the columns the user wants to see (properties of the habits)
+    :param sort_opts: A tuple with the field the user wants to sort on (or None) and whether they want to sort in
+        ascending or descending order
+    :param filter_opts: A tuple with the field the user wants to filter on (or None) and which value they want to be
+        visible (i.e. only show the habits with a certain value for the chosen filter field)
+    :return: A subset of `full_habits_list` with a subset of properties per habit as indicated by `columns`
+    """
+    sort_field = sort_opts[0]
+    filter_field = filter_opts[0]
+
+    modified_habits_list = full_habits_list
+
+    if sort_field is not None:
+        sort_order = sort_opts[1]
+        modified_habits_list = analytics.sort_habits(full_habits_list, sort_field, sort_order)
+
+    if filter_field is not None:
+        filter_value = filter_opts[1]
+        modified_habits_list = analytics.filter_habits(full_habits_list, filter_field, filter_value)
+
+    # Extract only the columns the user wants to see
+    return get_requested_habit_properties(modified_habits_list, columns)
+
+
 def show_stats_menu(show_home_menu_fn: Callable):
     """
     Display the user's statistics for all their habits
@@ -134,13 +168,13 @@ def show_stats_menu(show_home_menu_fn: Callable):
 
     action = "columns"  # the first action will always be for the user to select the columns they want to see
     columns = []  # the columns the user wants to see
-    filtered_headers = []  # the human-friendly labels for the columns the user wants to see
+    filtered_headers = []  # the human-friendly labels for the columns that the user wants to see
 
-    # We need to remember to sorting configuration as filters are applied/removed
+    # We need to remember the sorting configuration as filters are applied/removed etc
     sort_field = None
     sort_order = None
 
-    # Also need to remember the filter settings for when we update visible columns
+    # We also need to remember the filter settings for when we update visible columns etc
     filter_field = None
     filter_option = "none"
 
@@ -149,22 +183,10 @@ def show_stats_menu(show_home_menu_fn: Callable):
         if "filters" in stats_fields[field]:
             stats_fields[field]["filters"]["current"] = "none"
 
-    # TODO - FIX BUG: Choose a sort column.  Then choose different set of columns to view, excluding sort column.
-    # sort function is not happy because sort prop is no longer present in the array passed to it.  Larger question:
-    # Should user be able to sort on column that isn't visible??  Good UX for selecting different columns... reset sort?
     while action is not None:
         if action == "columns":
             columns = show_select_columns_menu(columns if len(columns) > 0 else None)
             filtered_headers = list(map(lambda column: stats_fields[column]["label"], columns))
-            # Show only desired columns
-            modified_habits_list = get_requested_habit_properties(full_habits_list, columns)
-
-            # Restore filtering
-            if filter_field is not None:
-                modified_habits_list = analytics.filter_habits(modified_habits_list, filter_field, filter_option)
-            # Restore sorting
-            if sort_field is not None:
-                modified_habits_list = analytics.sort_habits(modified_habits_list, sort_field, sort_order)
 
         elif action == "sort":
             sort_columns = get_sortable_columns(columns)
@@ -176,14 +198,6 @@ def show_stats_menu(show_home_menu_fn: Callable):
                 ("asc", sort_columns[sort_field]["sort_options"]["asc"]),
                 ("desc", sort_columns[sort_field]["sort_options"]["desc"]),
             ])).ask()
-
-            modified_habits_list = get_requested_habit_properties(  # Extract only the columns the user wants to see
-                analytics.sort_habits(full_habits_list, sort_field, sort_order), columns
-            )
-
-            # If there was a filter, restore it
-            if filter_field is not None:
-                modified_habits_list = analytics.filter_habits(modified_habits_list, filter_field, filter_option)
 
         elif action == "filter":
             filter_columns = get_filterable_columns()
@@ -199,23 +213,17 @@ def show_stats_menu(show_home_menu_fn: Callable):
 
             if filter_option == "none":
                 # Restore to original list
-                modified_habits_list = get_requested_habit_properties(full_habits_list, columns)
                 filter_field = None
-            else:
-                # Filter full list of habits
-                filtered_habits = analytics.filter_habits(full_habits_list, filter_field, filter_option)
-                # Show only desired columns
-                modified_habits_list = get_requested_habit_properties(filtered_habits, columns)
-
-            # If sort was applied before, re-apply to updated list
-            if sort_field is not None:
-                modified_habits_list = analytics.sort_habits(modified_habits_list, sort_field, sort_order)
 
         elif action == "home":
             show_home_menu()
             break
         elif action == "exit":
             sys.exit()
+
+        modified_habits_list = apply_modifications(
+            full_habits_list, columns, (sort_field, sort_order), (filter_field, filter_option)
+        )
 
         print(tabulate(map(
             lambda h: [value for (key, value) in h.items()],
