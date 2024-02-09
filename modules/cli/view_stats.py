@@ -176,7 +176,14 @@ def show_stats_menu(show_home_menu_fn: Callable):
                 ("asc", sort_columns[sort_field]["sort_options"]["asc"]),
                 ("desc", sort_columns[sort_field]["sort_options"]["desc"]),
             ])).ask()
-            modified_habits_list = analytics.sort_habits(modified_habits_list, sort_field, sort_order)
+
+            modified_habits_list = get_requested_habit_properties(  # Extract only the columns the user wants to see
+                analytics.sort_habits(full_habits_list, sort_field, sort_order), columns
+            )
+
+            # If there was a filter, restore it
+            if filter_field is not None:
+                modified_habits_list = analytics.filter_habits(modified_habits_list, filter_field, filter_option)
 
         elif action == "filter":
             filter_columns = get_filterable_columns()
@@ -193,6 +200,7 @@ def show_stats_menu(show_home_menu_fn: Callable):
             if filter_option == "none":
                 # Restore to original list
                 modified_habits_list = get_requested_habit_properties(full_habits_list, columns)
+                filter_field = None
             else:
                 # Filter full list of habits
                 filtered_habits = analytics.filter_habits(full_habits_list, filter_field, filter_option)
