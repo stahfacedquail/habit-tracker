@@ -13,7 +13,7 @@ def make_uuid():
     return str(uuid4())
 
 
-def to_datetime(datetime_str):
+def to_datetime(datetime_str: str):
     """
     Take a date/time string and convert into a datetime object
     :param datetime_str: e.g. "2023-10-05 12:00:54", which is how dates are stored in the database

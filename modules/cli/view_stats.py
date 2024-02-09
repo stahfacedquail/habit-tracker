@@ -1,7 +1,7 @@
 import sys
 
 import questionary
-from typing import Optional
+from typing import Optional, Callable
 from tabulate import tabulate
 
 from modules.cli.utils import create_choices
@@ -121,7 +121,7 @@ def get_filterable_columns():
     }
 
 
-def show_stats_menu(show_home_menu_fn):
+def show_stats_menu(show_home_menu_fn: Callable):
     """
     Display the user's statistics for all their habits
     :param show_home_menu_fn: The function to invoke in order to show the Home menu

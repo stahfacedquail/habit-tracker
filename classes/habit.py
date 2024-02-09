@@ -1,6 +1,7 @@
 from datetime import datetime
 from multimethod import multimethod
 from typing import Union, Optional
+
 from modules.db import create_habit, get_habit, delete_habit
 from modules import utils
 from classes.activity import Activity
@@ -253,6 +254,14 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                                                                 end_date))
 
     def get_completion_rate(self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None):
+        """
+        Calculate the fraction of days/weeks on which the habit was performed out of the date range provided, or since
+        the creation of the habit up until today in the absence of one or both of the date range components
+        :param start_date: The starting point for the date range we want to calculate the rate over
+        :param end_date: The ending point for the date range we want to calculate the rate over
+        :return: A dictionary object show how many periods performance of the habit were recorded on, the number of
+            periods in the date range used for the calculation, and the completion rate
+        """
         get_num_periods_from_to = utils.get_num_days_from_to if self.__recurrence__ == "daily" \
             else utils.get_num_weeks_from_to
         if start_date is None:
@@ -275,9 +284,19 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         return self.__activities__[-1].get_performed_at()
 
     def remove(self):
+        """
+        Invoked to delete the habit from the database
+        """
         delete_habit(self.__uuid__)
 
     def get_interval(self, count: int = 1):
+        """
+        Utility function to get the period type corresponding to a habit's recurrence type, e.g. for "daily" habits, the
+        interval is "day".
+        :param count: The number of intervals (which will impact whether to return the interval name in singular or as a
+            plural
+        :return: A label like "day" or "weeks" etc.
+        """
         interval = "day" if self.get_recurrence() == "daily" else "week"
         plural_suffix = "s" if count != 1 else ""
         return f"{interval}{plural_suffix}"

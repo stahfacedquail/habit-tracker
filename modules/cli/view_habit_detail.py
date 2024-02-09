@@ -1,7 +1,7 @@
 import sys
 
 import questionary
-from typing import Optional
+from typing import Optional, Callable
 from tabulate import tabulate
 
 from modules import habits
@@ -14,7 +14,7 @@ from modules.cli.utils import create_choices, get_latest_streak_message, perform
 show_home_menu = lambda: None  # noop as initial value
 
 
-def show_habits_abridged(show_home_menu_fn: Optional[any] = None):
+def show_habits_abridged(show_home_menu_fn: Optional[Callable] = None):
     """
     Show a list of the habits' titles for the user to select from, in order for them to execute some action on that
     habit

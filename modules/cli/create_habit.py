@@ -1,6 +1,7 @@
 import sys
 
 import questionary
+from typing import Callable
 
 from classes.habit import Habit
 from modules.cli.utils import create_choices, perform_habit
@@ -10,7 +11,7 @@ from modules.cli.utils import create_choices, perform_habit
 show_home_menu = lambda: None  # noop as initial value
 
 
-def show_create_habit_menu(show_home_menu_fn):
+def show_create_habit_menu(show_home_menu_fn: Callable):
     """
     Present the UI to create a new habit
     :param show_home_menu_fn: The function to invoke in order to show the Home menu
