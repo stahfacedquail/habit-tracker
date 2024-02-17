@@ -16,11 +16,21 @@ def disconnect():
 
 
 def setup_tables():
+    """
+    If the required tables aren't all present, clear out the database and create them afresh
+    :return: Indication of whether the table setup had to be done or not
+    """
     cur = db_connection.cursor()
-    # clear old data
+
+    # check if tables exist
+    cur.execute("SELECT name FROM sqlite_master WHERE name IN ('habits', 'activities', 'recurrence_types')")
+    tables = cur.fetchall()
+    if len(tables) == 3:  # all the expected tables are there; no need to re-create
+        return False
+
+    # possibly just start afresh if some of the expected tables aren't there
     remove_tables()
 
-    # create afresh
     cur.execute("CREATE TABLE recurrence_types(type TEXT PRIMARY KEY)")
 
     cur.execute("""
@@ -43,6 +53,8 @@ def setup_tables():
                 REFERENCES habits(uuid)
         )
     """)
+
+    return True
 
 
 def remove_tables():
