@@ -1,5 +1,5 @@
 from uuid import uuid4
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from math import floor
 from functools import reduce
@@ -206,3 +206,16 @@ def get_last_6_months_date_range(end_date: Optional[datetime] = None):
             start_date = datetime(end_date.year, (end_date.month - 6) + 1, 1)
 
     return start_date, end_date
+
+
+def get_as_local_time(dt_as_utc: datetime):
+    """
+    Converts a UTC datetime to a datetime in the local timezone
+    :param dt_as_utc: UTC datetime object
+    :return: Datetime object with local time
+    """
+    return datetime.fromtimestamp(dt_as_utc.timestamp())
+
+
+def get_as_utc(local_dt: datetime):
+    return datetime.fromtimestamp(local_dt.timestamp(), tz=timezone.utc)
