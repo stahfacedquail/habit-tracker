@@ -3,6 +3,7 @@ import questionary
 from datetime import datetime
 
 from classes.habit import Habit
+from modules.utils import get_as_local_time, get_as_gmt
 
 
 def create_choices(options: list[tuple], pre_selections: Optional[list[str]] = None):
@@ -50,7 +51,10 @@ def get_latest_streak_message(streak: dict, recurrence: str):
     interval = "day" if recurrence == "daily" else "week"
 
     if streak["is_current"] is False:  # most recent streak was broken
-        part_1 = f"Your last streak ran from {streak['start']} until {streak['end']}"
+        localised_start_dt = get_as_local_time(streak["start"])
+        localised_end_dt = get_as_local_time(streak["end"])
+
+        part_1 = f"Your last streak ran from {localised_start_dt} until {localised_end_dt}"
         part_2 = f"— a {'decent' if streak['length'] <= 4 else 'whopping'}"
         part_3 = f"{streak['length']} {interval}{'' if streak['length'] == 1 else 's'}!"
         part_4 = "Today feels like a good day to start a new one 🚀"
@@ -107,4 +111,4 @@ def get_custom_date_range():
                 questionary.print(f"Something doesn't quite look right: {e}.  " +
                                   "Make sure you provide a valid date, in the specified format.")
 
-    return start, end
+    return get_as_gmt(start), get_as_gmt(end)

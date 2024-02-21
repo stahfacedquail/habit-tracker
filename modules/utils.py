@@ -5,6 +5,11 @@ from math import floor
 from functools import reduce
 
 
+"""
+NOTE: All the date-related functions expect and/or return a GMT datetime.
+"""
+# TODO: BUG - If I add an activity, the num days/weeks performed doesn't increase...
+
 def make_uuid():
     """
     Generate a random UUID.
@@ -19,7 +24,7 @@ def to_datetime(datetime_str: str):
     :param datetime_str: e.g. "2023-10-05 12:00:54", which is how dates are stored in the database
     :return: The corresponding datetime object
     """
-    return datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+    return datetime.strptime(f"{datetime_str}+0000", "%Y-%m-%d %H:%M:%S%z")
 
 
 def to_date_only_string(dt: datetime):
@@ -156,66 +161,72 @@ def get_streak_accurate_params(start_date_activities: str, end_date_activities: 
 
 def get_last_week_date_range(end_date: Optional[datetime] = None):
     if end_date is None:
-        end_date = datetime.today()
+        end_date = get_as_gmt(datetime.today())
     start_date = end_date - timedelta(days=6)  # minus 6 and not 7 because range includes today
     return strip_out_time(start_date), end_date
 
 
 def get_last_month_date_range(end_date: Optional[datetime] = None):
     if end_date is None:
-        end_date = datetime.today()
+        end_date = get_as_gmt(datetime.today())
 
     if end_date.month == 1:
         if end_date.day == 31:  # One month back from 31 Jan must be 1 Jan
-            start_date = datetime(end_date.year, 1, 1)
+            start_date = datetime(end_date.year, 1, 1, tzinfo=timezone.utc)
         else:  # One month back from any other date in Jan is the (same date + 1) in December, e.g. one month back from
             # 18 January 2023 is 19 December 2023
-            start_date = datetime(end_date.year - 1, 12, end_date.day + 1)
+            start_date = datetime(end_date.year - 1, 12, end_date.day + 1, tzinfo=timezone.utc)
     else:
         try:
             # Try to get (end date + 1) in the previous month...  e.g. if end_date is 15 March 2023, then start_date
             # should be 16 February 2023
-            start_date = datetime(end_date.year, end_date.month - 1, end_date.day + 1)
+            start_date = datetime(end_date.year, end_date.month - 1, end_date.day + 1, tzinfo=timezone.utc)
         except ValueError:
             # If it's out of range for previous month, then just begin the range with the 1st day of the end month
             # e.g. If end_date is 30 March 2023, one month before that is "31 February 2023", so just make 1 March 2023
             # the beginning of the range
-            start_date = datetime(end_date.year, end_date.month, 1)
+            start_date = datetime(end_date.year, end_date.month, 1, tzinfo=timezone.utc)
 
     return start_date, end_date
 
 
 def get_last_6_months_date_range(end_date: Optional[datetime] = None):
     if end_date is None:
-        end_date = datetime.today()
+        end_date = get_as_gmt(datetime.today())
 
     if end_date.month == 6:  # e.g. If end_date is 18 June 2024, start_date should be 19 December 2023
-        start_date = datetime(end_date.year - 1, 12, end_date.day + 1)
+        start_date = datetime(end_date.year - 1, 12, end_date.day + 1, tzinfo=timezone.utc)
     elif end_date.month < 6:  # Six months ago will take us to the previous year
         try:
             # e.g. (2 - 6) % 12 == (-4) % 12 == 8, so 6 months back from Feb (month 2) lands us in August (month 8)
             # of the previous year
-            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12, end_date.day + 1)
+            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12, end_date.day + 1, tzinfo=timezone.utc)
         except ValueError:
             # If the day is out of range for that month, just start the period at the beginning of the following month
-            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12 + 1, 1)
+            start_date = datetime(end_date.year - 1, (end_date.month - 6) % 12 + 1, 1, tzinfo=timezone.utc)
     else:  # Six months ago lands us within the same year as end_date
         try:
-            start_date = datetime(end_date.year, end_date.month - 6, end_date.day + 1)
+            start_date = datetime(end_date.year, end_date.month - 6, end_date.day + 1, tzinfo=timezone.utc)
         except ValueError:
-            start_date = datetime(end_date.year, (end_date.month - 6) + 1, 1)
+            start_date = datetime(end_date.year, (end_date.month - 6) + 1, 1, tzinfo=timezone.utc)
 
     return start_date, end_date
 
 
-def get_as_local_time(dt_as_utc: datetime):
+def get_as_local_time(dt_as_gmt: datetime):
     """
-    Converts a UTC datetime to a datetime in the local timezone
-    :param dt_as_utc: UTC datetime object
+    Converts a GMT datetime to a datetime in the local timezone
+    :param dt_as_gmt: UTC datetime object
     :return: Datetime object with local time
     """
-    return datetime.fromtimestamp(dt_as_utc.timestamp())
+    return datetime.fromtimestamp(dt_as_gmt.timestamp())
 
 
-def get_as_utc(local_dt: datetime):
+def get_as_gmt(local_dt: datetime):
+    """
+    Converts a datetime into its GMT equivalent
+    :param local_dt: The datetime in a local timezone
+    :return: The GMT equivalent of `local_dt`
+    """
     return datetime.fromtimestamp(local_dt.timestamp(), tz=timezone.utc)
+

@@ -44,4 +44,4 @@ class Activity:
         self.__performed_at__ = utils.to_datetime(activity_tuple[2])
 
     def __str__(self):
-        return f"Habit {self.__habit__} performed at {self.__performed_at__}"
+        return f"Habit {self.__habit__} performed at {utils.get_as_local_time(self.__performed_at__)}"

@@ -1,8 +1,9 @@
 from modules.utils import make_uuid
 from datetime import datetime, timedelta
+from modules.utils import get_as_gmt
 
 
-today = datetime.today()
+today = get_as_gmt(datetime.today())
 start = today - timedelta(days=18)
 
 habits = [

@@ -58,7 +58,7 @@ class Habit:
     def __str__(self):
         return f"""Title: {self.__title__}
 Recurs: {self.__recurrence__}
-Created at: {self.__created_at__}
+Created at: {utils.get_as_local_time(self.__created_at__)}
 Has been performed {len(self.__activities__)} time{"" if len(self.__activities__) == 1 else "s"}"""
 
     def __refresh__(self):
@@ -174,7 +174,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         return streaks_detailed_list
 
-    def get_latest_streak(self, today: Optional[datetime] = datetime.today()):
+    def get_latest_streak(self, today: Optional[datetime] = utils.get_as_gmt(datetime.today())):
         """
         Calculates the user's current streak (i.e. relative to `today`).
         :return: A dictionary object containing the accurate start and end dates of the streak, and the length of the
@@ -267,7 +267,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         if start_date is None:
             start_date = self.__created_at__
         if end_date is None:
-            end_date = datetime.today()
+            end_date = utils.get_as_gmt(datetime.today())
         num_total_periods = get_num_periods_from_to(start_date, end_date)
         num_active_dates = self.get_number_of_times_completed(start_date, end_date)
 
