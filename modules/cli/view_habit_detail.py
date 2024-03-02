@@ -5,8 +5,7 @@ from typing import Optional, Callable
 from tabulate import tabulate
 
 from modules import habits
-from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range,\
-    get_as_local_time
+from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range
 from classes.habit import Habit
 from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range
 
@@ -52,14 +51,14 @@ def show_habit_actions_menu(habit: Habit):
     last_performed = habit.get_date_last_performed()
     questionary.print(f"""
 Title: {habit.get_title()}
-Date created: {get_as_local_time(habit.get_created_at())}
+Date created: {habit.get_created_at()}
 Recurrence: {habit.get_recurrence()}
-Last performed: {get_as_local_time(last_performed) if last_performed is not None else "No activities recorded yet"}
+Last performed: {last_performed if last_performed is not None else "No activities recorded yet"}
 Latest streak: {streak_message}
     """)
 
     action = questionary.select("What would you like to do next?", create_choices([
-        ("perform", f"Mark this habit as done for the {habit.get_interval()}"),
+        ("perform", f"Mark this habit as done for the {habit.get_interval_label()}"),
         ("streaks", "View all the streaks for this habit"),
         ("completion", "View your completion rate for this habit"),
         ("delete", "Delete this habit"),
@@ -102,11 +101,11 @@ def show_streaks_menu(habit: Habit):
     else:
         streaks_table = list(map(lambda streak: [
             streak["length"],
-            get_as_local_time(streak["start"]),
-            get_as_local_time(streak["end"]),
+            streak["start"],
+            streak["end"],
         ], streaks))
         print(tabulate(streaks_table,
-                       headers=[f"Length ({habit.get_interval()}s)", "From", "Until"],
+                       headers=[f"Length ({habit.get_interval_label()}s)", "From", "Until"],
                        colalign=("center",)))
 
     follow_up_action = questionary.select("What would you like to do next?", create_choices([
@@ -155,9 +154,9 @@ def show_completion_rate_menu(habit: Habit):
     start_date = max(start_date, habit.get_created_at())
     completion = habit.get_completion_rate(start_date, end_date)
 
-    completion_message_intro = f"From {get_as_local_time(start_date)} to {get_as_local_time(end_date)},"
+    completion_message_intro = f"From {start_date} to {end_date},"
     completion_message = f"you have performed this habit on {completion['num_active_periods']} out of " +\
-        f"{completion['num_total_periods']} {habit.get_interval(completion['num_total_periods'])}.\n" +\
+        f"{completion['num_total_periods']} {habit.get_interval_label(completion['num_total_periods'])}.\n" +\
         f"This is a completion rate of {round(100 * completion['rate'])}%."
     questionary.print(f"{completion_message_intro} {completion_message}")
 
