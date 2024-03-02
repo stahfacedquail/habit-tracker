@@ -3,6 +3,7 @@ from modules import db, utils
 from classes.habit import Habit
 
 
+# TODO: Rethink time tests - use freezegun for consistency (timezones)
 class TestHabit:
     def setup_method(self):
         db.connect("test.db")
@@ -18,13 +19,14 @@ class TestHabit:
 
     def test_create_habit_with_db_timestamp(self):
         habit = Habit("Water plants", "weekly")
+        today = date.today()
         assert habit.get_uuid() is not None
         assert habit.get_title() == "Water plants"
         assert habit.get_recurrence() == "weekly"
         assert habit.get_created_at() is not None
-        assert habit.get_created_at().day == date.today().day
-        assert habit.get_created_at().month == date.today().month
-        assert habit.get_created_at().year == date.today().year
+        assert habit.get_created_at().day == today.day
+        assert habit.get_created_at().month == today.month
+        assert habit.get_created_at().year == today.year
         assert len(habit.get_activities()) == 0
 
     def test_perform_habit_with_manual_timestamp(self):
@@ -36,16 +38,18 @@ class TestHabit:
         assert execution.get_habit_uuid() == habit.get_uuid()
         assert execution.get_performed_at() == utils.to_datetime("2023-05-29 21:00:43")
 
+    # TODO: Need to test this with freezegun instead because timestamp difference in timezone
     def test_perform_habit_with_db_timestamp(self):
         habit = Habit("Practise piano", "daily")
         habit.perform()
+        today = date.today()
         assert len(habit.get_activities()) == 1
         execution = habit.get_activities()[0]
         assert execution.get_uuid() is not None
         assert execution.get_habit_uuid() == habit.get_uuid()
-        assert execution.get_performed_at().day == date.today().day
-        assert execution.get_performed_at().month == date.today().month
-        assert execution.get_performed_at().year == date.today().year
+        assert execution.get_performed_at().day == today.day
+        assert execution.get_performed_at().month == today.month
+        assert execution.get_performed_at().year == today.year
 
     def test_fetch_habit(self):
         habit = Habit("Practise piano", "daily", "2023-05-28 19:01:33")
@@ -71,7 +75,7 @@ class TestHabit:
         assert habit_model.get_uuid() == "dbf01807-ef61-485f-9637-cd53ee49e09e"
         assert habit_model.get_title() == "Practise piano"
         assert habit_model.get_recurrence() == "daily"
-        assert habit_model.get_created_at() == utils.to_datetime("2023-05-28 19:33:12")
+        assert habit_model.get_created_at() == utils.to_datetime("2023-05-28 19:33:12", True)  # "straight" from db
         assert len(habit_model.get_activities()) == 2
 
     def test_to_string(self):
