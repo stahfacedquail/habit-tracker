@@ -15,7 +15,6 @@ def show_create_habit_menu(show_home_menu_fn: Callable):
     """
     Present the UI to create a new habit
     :param show_home_menu_fn: The function to invoke in order to show the Home menu
-    :param follow_up: A function to call after successfully creating the habit
     """
     global show_home_menu
     show_home_menu = show_home_menu_fn
@@ -42,7 +41,7 @@ def show_create_habit_follow_up_menu(habit: Habit):
     :param habit: The newly-created habit
     """
     action = questionary.select("What would you like to do next?", create_choices([
-        ("perform", f"Mark this habit as done for the {habit.get_interval()}"),
+        ("perform", f"Mark this habit as done for the {habit.get_interval_label()}"),
         ("home", "Go back home"),
         ("exit", "Exit"),
     ])).ask()
