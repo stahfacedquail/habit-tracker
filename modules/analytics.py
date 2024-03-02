@@ -1,23 +1,27 @@
 from typing import Optional
 from datetime import datetime
-from modules import db, utils
+from modules import db
 from classes.habit import Habit
 
 
-def get_habits(today: Optional[datetime] = utils.get_as_gmt(datetime.today())):
+def get_habits(today: Optional[datetime] = None):
     """
     Fetch all the user's habits.
     :return: A list of dictionary objects containing various properties of the user's habits.
     """
+    if today is None:  # don't set as default value in constructor because only gets computed once, it seems
+        today = datetime.today()
+
     all_habits = db.get_all_habits()
 
     def compute_properties(h: dict[str, tuple]):
         habit = Habit(h)
+
         return {
             "title": habit.get_title(),
-            "created_at": utils.get_as_local_time(habit.get_created_at()),
+            "created_at": habit.get_created_at(),
             "recurrence": habit.get_recurrence(),
-            "last_performed": utils.get_as_local_time(habit.get_date_last_performed()),
+            "last_performed": habit.get_date_last_performed(),
             "num_periods_performed": habit.get_number_of_times_completed(end_date=today),
             "completion_rate": round(100 * habit.get_completion_rate(end_date=today)["rate"]),
             "latest_streak": habit.get_latest_streak(today)["length"],
