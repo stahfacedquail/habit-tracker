@@ -28,7 +28,7 @@ def setup_tables():
     if len(tables) == 3:  # all the expected tables are there; no need to re-create
         return False
 
-    # possibly just start afresh if some of the expected tables aren't there
+    # just start afresh if some of the expected tables aren't there
     remove_tables()
 
     cur.execute("CREATE TABLE recurrence_types(type TEXT PRIMARY KEY)")
@@ -86,6 +86,13 @@ def populate_starter_data():
 
 
 def create_habit(title, recurrence, created_at):
+    """
+    Create a record in the database for this habit
+    :param title: The title of the new habit
+    :param recurrence: How frequently the habit should be performed
+    :param created_at: A datetime string (in GMT) when the habit was created, with the format YYYY-mm-DD HH:MM:SS
+    :return: The newly-created record, which is returned as a tuple
+    """
     uuid = make_uuid()
 
     cur = db_connection.cursor()
@@ -103,6 +110,13 @@ def create_habit(title, recurrence, created_at):
 
 
 def create_activity(habit_uuid, performed_at):
+    """
+        Create a record in the database for this performance of a given habit
+        :param habit_uuid: The uuid of the habit that was performed
+        :param performed_at: A datetime string (in GMT) when the habit was performed, with the format
+            YYYY-mm-DD HH:MM:SS
+        :return: The newly-created record, which is returned as a tuple
+        """
     uuid = make_uuid()
 
     cur = db_connection.cursor()
@@ -149,11 +163,11 @@ def get_all_habits():
         that particular habit.
     """
     cur = db_connection.cursor()
-    cur.execute("SELECT * FROM habits ORDER BY uuid")
+    cur.execute("SELECT * FROM habits ORDER BY uuid ASC")
     habit_tuples = cur.fetchall()
     augmented_habits = []  # i.e. habits with their list of when they got done
 
-    cur.execute("SELECT * FROM activities ORDER BY habit, performed_at")
+    cur.execute("SELECT * FROM activities ORDER BY habit ASC, performed_at ASC")
     activity_tuples = cur.fetchall()
 
     activity_idx = 0  # index to loop from start to end of `activity_tuples`
