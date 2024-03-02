@@ -16,10 +16,12 @@ class Habit:
         :param title: The title of the habit
         :param recurrence: How often the habit should be performed, e.g. daily
         :param created_at: The date/time at which the habit was created, according to the user.  If not specified, the
-            database will add a timestamp when the record is created.
+            database will add a timestamp when the record is created.  The provided date/time is assumed to be of the
+            local timezone.  This value should be a string of the format YYYY-mm-dd HH:MM:SS.
         :return: None
         """
-        created_habit = create_habit(title, recurrence, created_at)
+        created_at_gmt = utils.format_date_for_db(created_at) if created_at is not None else None
+        created_habit = create_habit(title, recurrence, created_at_gmt)
         self.__parse_from_db__(created_habit)
 
     @multimethod
@@ -50,15 +52,39 @@ class Habit:
         return self.__recurrence__
 
     def get_created_at(self):
+        """
+        :return: The datetime the habit was created on (local timezone)
+        """
         return self.__created_at__
 
     def get_activities(self):
         return self.__activities__
 
+    def get_date_last_performed(self):
+        """
+        :return: The last datetime this habit was performed (local timezone) (or None if never performed)
+        """
+        if len(self.__activities__) == 0:
+            return None
+
+        return self.__activities__[-1].get_performed_at()
+
+    def get_interval_label(self, count: int = 1):
+        """
+        Utility function to get the period type corresponding to a habit's recurrence type, e.g. for "daily" habits, the
+        interval is "day".
+        :param count: The number of intervals (which will impact whether to return the interval name in singular or as a
+            plural
+        :return: A label like "day" or "weeks" etc.
+        """
+        interval = "day" if self.get_recurrence() == "daily" else "week"
+        plural_suffix = "s" if count != 1 else ""
+        return f"{interval}{plural_suffix}"
+
     def __str__(self):
         return f"""Title: {self.__title__}
 Recurs: {self.__recurrence__}
-Created at: {utils.get_as_local_time(self.__created_at__)}
+Created at: {self.__created_at__}
 Has been performed {len(self.__activities__)} time{"" if len(self.__activities__) == 1 else "s"}"""
 
     def __refresh__(self):
@@ -69,16 +95,6 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         """
         fetched_habit = get_habit(self.__uuid__)
         self.__parse_from_db__(fetched_habit)
-
-    def perform(self, performed_at: Optional[str] = None):
-        """
-        Indicate that this habit has been performed.
-        :param performed_at: The date/time at which the habit was performed.  If not specified, the database
-            will add the timestamp at which the record was created.
-        :return: None
-        """
-        Activity(self.__uuid__, performed_at)
-        self.__refresh__()
 
     def __parse_from_db__(self, db_item: dict[str, Union[tuple[str, ...], list[tuple[str, ...]]]]):
         """
@@ -98,11 +114,28 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         self.__uuid__ = db_habit[0]
         self.__title__ = db_habit[1]
         self.__recurrence__ = db_habit[2]
-        self.__created_at__ = utils.to_datetime(db_habit[3])
+        self.__created_at__ = utils.to_datetime(db_habit[3], True)
 
         self.__activities__ = []
         for activity in db_activities:
             self.__activities__.append(Activity(activity))
+
+    def perform(self, performed_at: Optional[str] = None):
+        """
+        Indicate that this habit has been performed.
+        :param performed_at: The date/time at which the habit was performed.  If not specified, the database
+            will add the timestamp at which the record was created.  This must be a datetime of the local timezone, and
+            should be in the format YYYY-mm-dd HH:MM:SS.
+        :return: None
+        """
+        Activity(self.__uuid__, performed_at)
+        self.__refresh__()
+
+    def remove(self):
+        """
+        Invoked to delete the habit from the database
+        """
+        delete_habit(self.__uuid__)
 
     def get_all_streaks(self, sort_by: str = "date", sort_order: str = "desc"):
         """
@@ -174,13 +207,12 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
 
         return streaks_detailed_list
 
-    def get_latest_streak(self, today: Optional[datetime] = utils.get_as_gmt(datetime.today())):
+    def get_latest_streak(self, today: Optional[datetime] = None):
         """
         Calculates the user's current streak (i.e. relative to `today`).
         :return: A dictionary object containing the accurate start and end dates of the streak, and the length of the
             streak.
         """
-
         if len(self.__activities__) == 0:
             return {
                 "length": 0,
@@ -189,6 +221,9 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
                 "is_current": None,
                 "can_extend_today": None,
             }
+
+        if today is None:
+            today = datetime.today()
 
         activities_grouped_by_date = utils.group_activities_by_performance_period(self.__activities__,
                                                                                   self.__recurrence__)
@@ -257,8 +292,8 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         """
         Calculate the fraction of days/weeks on which the habit was performed out of the date range provided, or since
         the creation of the habit up until today in the absence of one or both of the date range components
-        :param start_date: The starting point for the date range we want to calculate the rate over
-        :param end_date: The ending point for the date range we want to calculate the rate over
+        :param start_date: The starting point for the date range we want to calculate the rate over (local time)
+        :param end_date: The ending point for the date range we want to calculate the rate over (local time)
         :return: A dictionary object show how many periods performance of the habit were recorded on, the number of
             periods in the date range used for the calculation, and the completion rate
         """
@@ -267,7 +302,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
         if start_date is None:
             start_date = self.__created_at__
         if end_date is None:
-            end_date = utils.get_as_gmt(datetime.today())
+            end_date = datetime.today()
         num_total_periods = get_num_periods_from_to(start_date, end_date)
         num_active_dates = self.get_number_of_times_completed(start_date, end_date)
 
@@ -276,27 +311,3 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             "num_total_periods": num_total_periods,
             "rate": num_active_dates / num_total_periods
         }
-
-    def get_date_last_performed(self):
-        if len(self.__activities__) == 0:
-            return None
-
-        return self.__activities__[-1].get_performed_at()
-
-    def remove(self):
-        """
-        Invoked to delete the habit from the database
-        """
-        delete_habit(self.__uuid__)
-
-    def get_interval(self, count: int = 1):
-        """
-        Utility function to get the period type corresponding to a habit's recurrence type, e.g. for "daily" habits, the
-        interval is "day".
-        :param count: The number of intervals (which will impact whether to return the interval name in singular or as a
-            plural
-        :return: A label like "day" or "weeks" etc.
-        """
-        interval = "day" if self.get_recurrence() == "daily" else "week"
-        plural_suffix = "s" if count != 1 else ""
-        return f"{interval}{plural_suffix}"

@@ -11,9 +11,11 @@ class Activity:
         Create a new activity in the database and then initialise a model to represent the newly-created activity.
         :param habit_uuid: The uuid of the habit that's being performed
         :param performed_at: The date/time at which the habit was performed, as specified by the user.  If not
-            specified, the database will add a timestamp when the record is created.
+            specified, the database will add a timestamp when the record is created.  This date/time is taken to be
+            of the local timezone.  This value should be a string of the format YYYY-mm-dd HH:MM:SS.
         """
-        new_activity = create_activity(habit_uuid, performed_at)
+        performed_at_gmt = utils.format_date_for_db(performed_at) if performed_at is not None else None
+        new_activity = create_activity(habit_uuid, performed_at_gmt)
         self.__parse_from_db__(new_activity)
 
     @multimethod
@@ -31,6 +33,9 @@ class Activity:
         return self.__habit__
 
     def get_performed_at(self):
+        """
+        :return: The datetime this activity was performed on (local timezone)
+        """
         return self.__performed_at__
 
     def __parse_from_db__(self, activity_tuple: tuple[str, str, str]):
@@ -41,7 +46,7 @@ class Activity:
         """
         self.__uuid__ = activity_tuple[0]
         self.__habit__ = activity_tuple[1]
-        self.__performed_at__ = utils.to_datetime(activity_tuple[2])
+        self.__performed_at__ = utils.to_datetime(activity_tuple[2], True)
 
     def __str__(self):
-        return f"Habit {self.__habit__} performed at {utils.get_as_local_time(self.__performed_at__)}"
+        return f"Habit {self.__habit__} performed at {self.__performed_at__}"
