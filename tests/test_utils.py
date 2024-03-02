@@ -19,6 +19,7 @@ class TestUtils:
         dt_string = utils.to_date_only_string(dt)
         assert dt_string == "2023-12-25"
 
+    # TODO: Test sensitive to timezone
     def test_strip_out_time(self):
         dt = datetime(2023, 12, 25, 15, 22, 45)
         zeroed_dt = utils.strip_out_time(dt)
