@@ -164,7 +164,6 @@ def show_stats_menu(show_home_menu_fn: Callable):
     show_home_menu = show_home_menu_fn
 
     full_habits_list = analytics.get_habits()  # to be kept pristine
-    modified_habits_list = None  # this will be the list that gets displayed and therefore shows changes like sorting
 
     action = "columns"  # the first action will always be for the user to select the columns they want to see
     columns = []  # the columns the user wants to see
