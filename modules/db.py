@@ -1,4 +1,6 @@
 import sqlite3
+from typing import Optional
+
 from modules import example_data
 from modules.utils import make_uuid
 
@@ -85,7 +87,7 @@ def populate_starter_data():
     db_connection.commit()
 
 
-def create_habit(title, recurrence, created_at):
+def create_habit(title, recurrence, created_at: Optional[str] = None):
     """
     Create a record in the database for this habit
     :param title: The title of the new habit

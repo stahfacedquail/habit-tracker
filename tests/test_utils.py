@@ -22,7 +22,7 @@ class TestUtils:
     # TODO: Test sensitive to timezone
     def test_strip_out_time(self):
         dt = datetime(2023, 12, 25, 15, 22, 45)
-        zeroed_dt = utils.strip_out_time(dt)
+        zeroed_dt = utils.get_start_of_day(dt)
         assert zeroed_dt.day == 25
         assert zeroed_dt.month == 12
         assert zeroed_dt.year == 2023

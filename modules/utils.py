@@ -51,7 +51,8 @@ def to_datetime(datetime_str: str, is_gmt: bool = False):
     """
     Take a date/time string and convert into a naive datetime object
     :param datetime_str: e.g. "2023-10-05 12:00:54", which is how dates are stored in the database
-    :param is_gmt: Indicates whether `datetime_str` is a GMT datetime
+    :param is_gmt: Indicates whether `datetime_str` is a GMT datetime (otherwise assumption is that
+        it is a local time)
     :return: The corresponding datetime object (local timezone)
     """
     if is_gmt:
@@ -70,11 +71,10 @@ def to_date_only_string(dt: datetime):
     return dt.strftime("%Y-%m-%d")
 
 
-def strip_out_time(dt: datetime):
+def get_start_of_day(dt: datetime):
     """
-    "Remove" the time bit from a datetime object (pretty much set the time to 00:00:00 in local time).
     :param dt: A datetime object (local time)
-    :return: A new datetime object where the time is midnight (local time)
+    :return: A new datetime object where the time on that date is midnight (local time)
     """
     return datetime(dt.year, dt.month, dt.day)
 
@@ -87,8 +87,8 @@ def get_num_days_from_to(start_date: datetime, end_date: datetime, inclusive: bo
     :param inclusive: Should `end_date` be included?
     :return: e.g. 19
     """
-    start_date_ignoring_time = strip_out_time(start_date)
-    end_date_ignoring_time = strip_out_time(end_date)
+    start_date_ignoring_time = get_start_of_day(start_date)
+    end_date_ignoring_time = get_start_of_day(end_date)
     return (end_date_ignoring_time - start_date_ignoring_time).days + (1 if inclusive else 0)
 
 
@@ -100,8 +100,8 @@ def get_num_weeks_from_to(date_a: datetime, date_b: datetime):
     :param date_b: e.g. 2024-01-08 08:12:12 (a Monday, about 2 weeks later)
     :return: 3
     """
-    monday_for_start_date = strip_out_time(date_a - timedelta(days=date_a.weekday()))
-    monday_for_end_date = strip_out_time(date_b - timedelta(days=date_b.weekday()))
+    monday_for_start_date = get_start_of_day(date_a - timedelta(days=date_a.weekday()))
+    monday_for_end_date = get_start_of_day(date_b - timedelta(days=date_b.weekday()))
     return floor((monday_for_end_date - monday_for_start_date).days/7) + 1
 
 
@@ -111,7 +111,7 @@ def get_week_start_date(date_a: datetime):
     :param date_a: e.g. 12 December 2023 14:30:00 (is on a Tuesday) (local time)
     :return: e.g. 11 December 2023 00:00:00 (the Monday that begins the week containing 12 December 2023) (local time)
     """
-    return strip_out_time(date_a) - timedelta(date_a.weekday())
+    return get_start_of_day(date_a) - timedelta(date_a.weekday())
 
 
 def add_interval(date_a: str, interval_type: str, num_intervals: int):
@@ -207,7 +207,7 @@ def get_last_week_date_range(end_date: Optional[datetime] = None):
     if end_date is None:
         end_date = datetime.today()
     start_date = end_date - timedelta(days=6)  # minus 6 and not 7 because range includes today
-    return strip_out_time(start_date), end_date
+    return get_start_of_day(start_date), end_date
 
 
 def get_last_month_date_range(end_date: Optional[datetime] = None):

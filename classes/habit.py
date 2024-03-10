@@ -35,10 +35,12 @@ class Habit:
         self.__parse_from_db__(fetched_habit)
 
     @multimethod
-    def __init__(self, db_item: dict):
+    def __init__(self, db_item: dict[str, Union[tuple[str, ...], list[tuple[str, ...]]]]):
         """
         Initialise the model to represent an existing habit (from the database).
-        :param db_item: The tuple representing a record from the "habits" table in the database.
+        :param db_item: The dictionary object that has a "habit" value, which is the habit tuple
+            from the database, and an "activities" value, which is a list of the activity tuples
+            belonging to this habit
         """
         self.__parse_from_db__(db_item)
 
