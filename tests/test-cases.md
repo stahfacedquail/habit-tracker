@@ -29,17 +29,22 @@
 - Delete habit
     - without activities
     - with activities
-- Get all streaks
-    - no streaks
-    - default sorting (date, most recent to least recent)
-    - sort by date, least recent to most recent
-    - sort by length, longest to shortest
-    - sort by length, shortest to longest
-    - multiple activities in a period
-        - as part of a streak (choose last performance to be end of streak)
-        - as part of a streak (choose 1st performance to start streak)
-        - as part of a streak (in the middle -- focus on length being correct)
-        - standalone (not part of a streak -- should not be considered a streak)
+- Get all streaks (daily habit, weekly habit)
+  - many streaks
+  - when streak is at end of activities list
+  - when streak is at beginning of activities list
+  - no streaks
+  - no activities
+  - default sorting (date, most recent to least recent)
+  - sort by date, least recent to most recent
+  - sort by length, longest to shortest
+  - sort by length, shortest to longest
+  - multiple activities in a period
+      - as part of a streak (choose last performance to be end of streak)
+      - as part of a streak (choose 1st performance to start streak)
+      - as part of a streak (in the middle -- focus on length being correct)
+      - standalone (not part of a streak -- should not be considered a streak)
+  - streak lasts for the whole period
 - Get latest streak
     - no streak
         - no streak ever
