@@ -2,3 +2,4 @@ multimethod
 pytest
 questionary
 tabulate
+freezegun
