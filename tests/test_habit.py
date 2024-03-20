@@ -104,6 +104,7 @@ class TestHabit:
         habit.perform("2023-06-17 18:25:43")
         habit.perform("2023-06-25 20:46:06")
 
+        # TODO: Compare dates like in other places
         last_performed_dt = habit.get_date_last_performed()
         assert last_performed_dt.year == 2023
         assert last_performed_dt.month == 6
