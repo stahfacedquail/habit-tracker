@@ -17,12 +17,9 @@
     - No activities
     - Has activities
     - Multiple activities on last period performed
-        - daily habit
-        - weekly habit
 - Get interval label
-    - daily habit
-    - weekly habit
-    - count != 1
+    - singular: daily, weekly habit
+    - plural: daily, weekly habit
 - To string
     - Habit that has activities
     - Habit that doesn't have activities
