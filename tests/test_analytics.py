@@ -19,7 +19,7 @@ class TestAnalytics:
         habit_1.perform("2023-06-17 15:23:44")
         habit_1.perform("2023-06-21 16:03:57")
 
-        habit_2 = Habit("Phone parents", "weekly", "2023-06-14 19:01:16")
+        habit_2 = Habit("phone parents", "weekly", "2023-06-14 19:01:16")
         habit_2.perform("2023-06-18 16:20:30")
         habit_2.perform("2023-06-21 16:42:11")
         habit_2.perform("2023-06-21 21:30:31")
@@ -42,7 +42,7 @@ class TestAnalytics:
         }
 
         expected_values_2 = {
-            "title": "Phone parents",
+            "title": "phone parents",
             "created_at": utils.to_datetime("2023-06-14 19:01:16"),
             "recurrence": "weekly",
             "last_performed": utils.to_datetime("2023-06-24 20:57:17"),
@@ -98,13 +98,13 @@ class TestAnalytics:
         habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
         sorted_habits = analytics.sort_habits(habits, "num_periods_performed", "asc")
         assert sorted_habits[0]["title"] == "Water plants"
-        assert sorted_habits[1]["title"] == "Phone parents"
+        assert sorted_habits[1]["title"] == "phone parents"
         assert sorted_habits[2]["title"] == "Practise piano"
 
     def test_sort_descending_order(self):
         habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
         sorted_habits = analytics.sort_habits(habits, "completion_rate", "desc")
-        assert sorted_habits[0]["title"] == "Phone parents"
+        assert sorted_habits[0]["title"] == "phone parents"
         assert sorted_habits[1]["title"] == "Practise piano"
         assert sorted_habits[2]["title"] == "Water plants"
 
@@ -113,7 +113,14 @@ class TestAnalytics:
         sorted_habits = analytics.sort_habits(habits, "last_performed", "asc")
         assert sorted_habits[0]["title"] == "Water plants"
         assert sorted_habits[1]["title"] == "Practise piano"
-        assert sorted_habits[2]["title"] == "Phone parents"
+        assert sorted_habits[2]["title"] == "phone parents"
+
+    def test_sort_is_case_insensitive(self):
+        habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
+        sorted_habits = analytics.sort_habits(habits, "title", "asc")
+        assert sorted_habits[0]["title"] == "phone parents"
+        assert sorted_habits[1]["title"] == "Practise piano"
+        assert sorted_habits[2]["title"] == "Water plants"
 
     def test_filter_returns_results(self):
         habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
@@ -122,7 +129,7 @@ class TestAnalytics:
 
         filtered_habit_titles = list(map(lambda h: h["title"], filtered_habits))
         assert "Water plants" in filtered_habit_titles
-        assert "Phone parents" in filtered_habit_titles
+        assert "phone parents" in filtered_habit_titles
 
     def test_filter_returns_no_results(self):
         habits = analytics.get_habits(datetime(2023, 6, 25, 16, 0, 0))
