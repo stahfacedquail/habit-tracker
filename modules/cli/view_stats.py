@@ -143,11 +143,11 @@ def apply_modifications(
 
     if sort_field is not None:
         sort_order = sort_opts[1]
-        modified_habits_list = analytics.sort_habits(full_habits_list, sort_field, sort_order)
+        modified_habits_list = analytics.sort_habits(modified_habits_list, sort_field, sort_order)
 
     if filter_field is not None:
         filter_value = filter_opts[1]
-        modified_habits_list = analytics.filter_habits(full_habits_list, filter_field, filter_value)
+        modified_habits_list = analytics.filter_habits(modified_habits_list, filter_field, filter_value)
 
     # Extract only the columns the user wants to see
     return get_requested_habit_properties(modified_habits_list, columns)
@@ -227,6 +227,7 @@ def show_stats_menu(show_home_menu_fn: Callable):
             modified_habits_list
         ), headers=filtered_headers))
 
+        questionary.press_any_key_to_continue().ask()
         action = questionary.select("What would you like to do next?", create_choices([
             ("columns", "Change the columns"),
             ("filter", "Change a filter"),

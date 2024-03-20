@@ -54,6 +54,7 @@ Recurrence: {habit.get_recurrence()}
 Last performed: {last_performed if last_performed is not None else "No activities recorded yet"}
 Latest streak: {streak_message}
     """)
+    questionary.press_any_key_to_continue().ask()
 
     action = questionary.select("What would you like to do next?", create_choices([
         ("perform", f"Mark this habit as done for the {habit.get_interval_label()}"),
@@ -105,6 +106,8 @@ def show_streaks_menu(habit: Habit):
         print(tabulate(streaks_table,
                        headers=[f"Length ({habit.get_interval_label()}s)", "From", "Until"],
                        colalign=("center",)))
+
+    questionary.press_any_key_to_continue().ask()
 
     follow_up_action = questionary.select("What would you like to do next?", create_choices([
         ("change_sort", "Choose a different order to sort the streaks"),
@@ -158,6 +161,8 @@ def show_completion_rate_menu(habit: Habit):
         f"This is a completion rate of {round(100 * completion['rate'])}%."
     questionary.print(f"{completion_message_intro} {completion_message}")
 
+    questionary.press_any_key_to_continue().ask()
+
     follow_up_action = questionary.select("What would you like to do next?", create_choices([
         ("different_date_range", "View your completion rate over a different date range"),
         ("habit_details", "Show all the details of this habit"),
@@ -181,6 +186,8 @@ def show_delete_habit_menu(habit: Habit):
     if confirm_delete:
         habit.remove()
         questionary.print("The habit was successfully deleted.", style="fg:lime")
+
+        questionary.press_any_key_to_continue().ask()
 
         follow_up_action = questionary.select("What would you like to do next?", create_choices([
             ("habits_list", "Go back to the list of all your habits"),

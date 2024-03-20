@@ -30,6 +30,7 @@ def show_create_habit_menu(show_home_menu_fn: Callable):
 
     questionary.print(f"Your new habit '{new_habit.get_title()}' was successfully created.", style="fg:lime")
 
+    questionary.press_any_key_to_continue().ask()
     show_create_habit_follow_up_menu(new_habit)
 
 

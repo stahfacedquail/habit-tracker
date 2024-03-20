@@ -37,6 +37,7 @@ def perform_habit(habit: Habit, show_next_menu):
         f"You've marked the habit '{habit.get_title()}' as done for the {habit.get_interval_label()}; nice!",
         style="fg:lime")
 
+    questionary.press_any_key_to_continue().ask()
     show_next_menu()
 
 
