@@ -1,10 +1,8 @@
-import sys
-
 import questionary
 from typing import Callable
 
 from classes.habit import Habit
-from modules.cli.utils import create_choices, perform_habit
+from modules.cli.utils import create_choices, perform_habit, close_app
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
 # circular imports)
@@ -51,5 +49,5 @@ def show_create_habit_follow_up_menu(habit: Habit):
     elif action == "home":
         show_home_menu()
     elif action == "exit":
-        sys.exit()
+        close_app()
 

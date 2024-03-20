@@ -1,8 +1,11 @@
+import sys
+
 from typing import Optional
 import questionary
 from datetime import datetime
 
 from classes.habit import Habit
+from modules import db
 
 
 def create_choices(options: list[tuple], pre_selections: Optional[list[str]] = None):
@@ -108,3 +111,12 @@ def get_custom_date_range():
                                   "Make sure you provide a valid date, in the specified format.")
 
     return start, end
+
+
+def close_app():
+    """
+    Before exiting the program, close the database connection and print a goodbye message.
+    """
+    db.disconnect()
+    questionary.print("Cheerio! :)")
+    sys.exit(0)

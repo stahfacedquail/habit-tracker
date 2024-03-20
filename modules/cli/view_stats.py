@@ -1,10 +1,8 @@
-import sys
-
 import questionary
 from typing import Optional, Callable
 from tabulate import tabulate
 
-from modules.cli.utils import create_choices
+from modules.cli.utils import create_choices, close_app
 from modules import analytics
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
@@ -218,7 +216,7 @@ def show_stats_menu(show_home_menu_fn: Callable):
             show_home_menu()
             break
         elif action == "exit":
-            sys.exit()
+            close_app()
 
         modified_habits_list = apply_modifications(
             full_habits_list, columns, (sort_field, sort_order), (filter_field, filter_option)

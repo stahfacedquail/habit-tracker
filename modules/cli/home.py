@@ -1,8 +1,6 @@
-import sys
-
 import questionary
 
-from modules.cli.utils import create_choices
+from modules.cli.utils import create_choices, close_app
 from modules.cli.create_habit import show_create_habit_menu
 from modules.cli.view_habit_detail import show_habits_abridged
 from modules.cli.view_stats import show_stats_menu
@@ -10,9 +8,7 @@ from modules.cli.view_stats import show_stats_menu
 
 # TODO: Pause between actions to let user first digest outcome, and then choose next action
 # TODO: Format dates nicely e.g. 23 December 2023
-# TODO: Instead of just sys.exit, show a nice goodbye message then exit
 # TODO: Headings to show where in the program the user is
-# TODO: Display for correct timezone
 # TODO: Alignment in tables (especially stats one) -- field-dependent
 
 def show_home_menu(starting_up=False):
@@ -37,4 +33,4 @@ def show_home_menu(starting_up=False):
     elif action == "stats":
         show_stats_menu(show_home_menu)
     elif action == "exit":
-        sys.exit()
+        close_app()

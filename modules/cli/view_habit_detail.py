@@ -1,5 +1,3 @@
-import sys
-
 import questionary
 from typing import Optional, Callable
 from tabulate import tabulate
@@ -7,7 +5,7 @@ from tabulate import tabulate
 from modules import habits
 from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range
 from classes.habit import Habit
-from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range
+from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range, close_app
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
 # circular imports)
@@ -33,7 +31,7 @@ def show_habits_abridged(show_home_menu_fn: Optional[Callable] = None):
     if action == "home":
         show_home_menu()
     elif action == "exit":
-        sys.exit()
+        close_app()
     else:
         habit_uuid = action
         habit = Habit(habit_uuid)
@@ -77,7 +75,7 @@ Latest streak: {streak_message}
     elif action == "back":
         show_habits_abridged()
     elif action == "exit":
-        sys.exit()
+        close_app()
 
 
 def show_streaks_menu(habit: Habit):
@@ -119,7 +117,7 @@ def show_streaks_menu(habit: Habit):
     elif follow_up_action == "habit_details":
         show_habit_actions_menu(habit)
     elif follow_up_action == "exit":
-        sys.exit()
+        close_app()
 
 
 def show_completion_rate_menu(habit: Habit):
@@ -171,7 +169,7 @@ def show_completion_rate_menu(habit: Habit):
     elif follow_up_action == "habit_details":
         show_habit_actions_menu(habit)
     elif follow_up_action == "exit":
-        sys.exit()
+        close_app()
 
 
 def show_delete_habit_menu(habit: Habit):
@@ -195,6 +193,6 @@ def show_delete_habit_menu(habit: Habit):
         elif follow_up_action == "habits_list":
             show_habits_abridged(show_home_menu)
         elif follow_up_action == "exit":
-            sys.exit()
+            close_app()
     else:
         show_habit_actions_menu(habit)
