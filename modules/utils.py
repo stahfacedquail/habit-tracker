@@ -67,6 +67,18 @@ def to_date_only_string(dt: datetime):
     return dt.strftime("%Y-%m-%d")
 
 
+def prettify_datetime(dt: datetime, with_time=True):
+    """
+    Get a prettified string of the given datetime object
+    :param dt: A datetime object (local time)
+    :param with_time: A boolean indicating whether to include the time or not
+    :return: A datetime string like "23 December 2023, 13:08" (local time)
+    """
+    if with_time:
+        return dt.strftime("%-d %B %Y, %H:%M")
+
+    return dt.strftime("%-d %B %Y")
+
 def get_start_of_day(dt: datetime):
     """
     :param dt: A datetime object (local time)
