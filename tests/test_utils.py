@@ -1,10 +1,29 @@
+from freezegun import freeze_time
+from datetime import datetime, timezone
 from modules import db, utils
-from datetime import datetime
 from classes.habit import Habit
 
 
 class TestUtils:
-    def test_to_datetime(self):
+    @freeze_time(tz_offset=+5)
+    def test_get_as_local_time(self):
+        t = datetime(year=2024, month=4, day=28, hour=6, minute=11, second=55, tzinfo=timezone.utc)
+        local_t = utils.get_as_local_time(t).strftime("%Y-%m-%d %H:%M:%S")
+        assert local_t == "2024-04-28 11:11:55"
+
+    @freeze_time(tz_offset=-3)
+    def test_get_as_gmt(self):
+        local_t = datetime(year=2024, month=4, day=28, hour=6, minute=11, second=55)
+        gmt_t = utils.get_as_gmt(local_t).strftime("%Y-%m-%d %H:%M:%S")
+        assert gmt_t == "2024-04-28 09:11:55"
+
+    @freeze_time(tz_offset=+8)
+    def test_format_time_for_db(self):
+        local_t = "2024-12-03 18:52:06"
+        gmt_t = utils.format_date_for_db(local_t)
+        assert gmt_t == "2024-12-03 10:52:06"
+
+    def test_to_datetime_with_local_time_input(self):
         dt_string = "2023-08-11 19:01:23"
         dt = utils.to_datetime(dt_string)
         assert dt.day == 11
@@ -14,13 +33,23 @@ class TestUtils:
         assert dt.minute == 1
         assert dt.second == 23
 
+    @freeze_time(tz_offset=-2)
+    def test_to_datetime_with_gmt_time_input(self):
+        dt_string = "2023-08-11 19:01:23"
+        dt = utils.to_datetime(dt_string, True)
+        assert dt.day == 11
+        assert dt.month == 8
+        assert dt.year == 2023
+        assert dt.hour == 17
+        assert dt.minute == 1
+        assert dt.second == 23
+
     def test_to_date_only_string(self):
         dt = datetime(2023, 12, 25, 15, 22, 0)
         dt_string = utils.to_date_only_string(dt)
         assert dt_string == "2023-12-25"
 
-    # TODO: Test sensitive to timezone
-    def test_strip_out_time(self):
+    def test_get_start_of_day(self):
         dt = datetime(2023, 12, 25, 15, 22, 45)
         zeroed_dt = utils.get_start_of_day(dt)
         assert zeroed_dt.day == 25
@@ -31,19 +60,34 @@ class TestUtils:
         assert zeroed_dt.second == 0
 
     def test_get_num_days_from_to(self):
-        start_dt = datetime(2023, 12, 29, 18, 0, 55)
-        end_dt = datetime(2023, 12, 31, 1, 57, 19)
-
         def test_inclusive_of_end_date():
+            start_dt = datetime(2023, 12, 29, 18, 0, 55)
+            end_dt = datetime(2023, 12, 31, 1, 57, 19)
             diff = utils.get_num_days_from_to(start_dt, end_dt)
             assert diff == 3
 
         def test_exclusive_of_end_date():
+            start_dt = datetime(2023, 12, 29, 18, 0, 55)
+            end_dt = datetime(2023, 12, 31, 1, 57, 19)
             diff = utils.get_num_days_from_to(start_dt, end_dt, False)
             assert diff == 2
 
+        def test_same_day_inclusive_of_end():
+            start_dt = datetime(2023, 12, 29, 1, 57, 19)
+            end_dt = datetime(2023, 12, 29, 18, 0, 55)
+            diff = utils.get_num_days_from_to(start_dt, end_dt)
+            assert diff == 1
+
+        def test_same_day_exclusive_of_end():
+            start_dt = datetime(2023, 12, 29, 1, 57, 19)
+            end_dt = datetime(2023, 12, 29, 18, 0, 55)
+            diff = utils.get_num_days_from_to(start_dt, end_dt, False)
+            assert diff == 0
+
         test_inclusive_of_end_date()
         test_exclusive_of_end_date()
+        test_same_day_inclusive_of_end()
+        test_same_day_exclusive_of_end()
 
     def test_get_num_weeks_from_to(self):
         def test_same_week():
@@ -169,10 +213,110 @@ class TestUtils:
             assert len(grouped_by_dt["2023-05-29"]) == 3
             assert len(grouped_by_dt["2023-06-19"]) == 1
 
-        # TODO: Test filtering
-
         setup_method()
         test_no_activities()
+        test_grouping_by_day()
+        test_grouping_by_week()
+        teardown_method()
+
+    def test_grouping_with_date_filters(self):
+        def setup_method():
+            db.connect("test.db")
+            db.setup_tables()
+
+        def teardown_method():
+            db.remove_tables()
+            db.disconnect()
+
+        def test_grouping_by_day():
+            habit = Habit("Practise piano", "daily", "2023-05-28 18:15:32")
+            habit.perform("2023-05-29 20:12:12")
+            habit.perform("2023-05-29 22:05:56")
+            habit.perform("2023-06-03 01:37:05")
+            habit.perform("2023-06-05 12:03:59")
+            habit.perform("2023-06-05 08:57:00")
+            habit.perform("2023-06-05 21:49:22")
+            habit.perform("2023-06-11 17:33:45")
+
+            # start date only
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                utils.to_datetime("2023-06-04 15:34:12"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-06-05"]) == 3
+            assert len(grouped_by_dt["2023-06-11"]) == 1
+
+            # end date only
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                end_date=utils.to_datetime("2023-06-04 15:34:12"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-05-29"]) == 2
+            assert len(grouped_by_dt["2023-06-03"]) == 1
+
+            # start date and end date
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                utils.to_datetime("2023-06-04 00:00:00"),
+                utils.to_datetime("2023-06-10 23:59:59"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 1
+            assert len(grouped_by_dt["2023-06-05"]) == 3
+
+        def test_grouping_by_week():
+            habit = Habit("Water plants", "weekly", "2023-05-28 18:15:32")
+            habit.perform("2023-05-29 20:12:12")
+            habit.perform("2023-06-03 22:05:56")
+            # -----------------------------------
+            habit.perform("2023-06-05 01:37:05")
+            habit.perform("2023-06-10 12:03:59")
+            habit.perform("2023-06-11 08:57:00")
+            # -----------------------------------
+            habit.perform("2023-06-29 21:49:22")
+            habit.perform("2023-07-02 17:33:45")
+
+            # start date only
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                utils.to_datetime("2023-06-04 15:34:12"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-06-05"]) == 3
+            assert len(grouped_by_dt["2023-06-26"]) == 2
+
+            # end date only
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                end_date=utils.to_datetime("2023-06-04 15:34:12"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 1
+            assert len(grouped_by_dt["2023-05-29"]) == 2
+
+            # start date and end date
+            grouped_by_dt = utils.group_activities_by_performance_period(
+                habit.get_activities(),
+                habit.get_recurrence(),
+                utils.to_datetime("2023-06-10 15:00:00"),
+                utils.to_datetime("2023-06-30 23:59:59"),
+            )
+            assert grouped_by_dt is not None
+            assert len(grouped_by_dt.keys()) == 2
+            assert len(grouped_by_dt["2023-06-05"]) == 1
+            assert len(grouped_by_dt["2023-06-26"]) == 1
+
+        setup_method()
         test_grouping_by_day()
         test_grouping_by_week()
         teardown_method()

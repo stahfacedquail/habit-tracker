@@ -13,7 +13,6 @@ def make_uuid():
     return str(uuid4())
 
 
-# TODO: Write tests for this
 def get_as_local_time(dt_as_gmt: datetime):
     """
     Converts a GMT datetime to a datetime in the local timezone
@@ -23,7 +22,6 @@ def get_as_local_time(dt_as_gmt: datetime):
     return datetime.fromtimestamp(dt_as_gmt.timestamp())
 
 
-# TODO: Write tests for this
 def get_as_gmt(local_dt: datetime):
     """
     Converts a datetime into its GMT equivalent
@@ -33,7 +31,6 @@ def get_as_gmt(local_dt: datetime):
     return datetime.fromtimestamp(local_dt.timestamp(), tz=timezone.utc)
 
 
-# TODO: Write tests for this
 def format_date_for_db(dt_string: str):
     """
     Turns the provided datetime string into a GMT datetime string in the correct format for the database
@@ -46,7 +43,6 @@ def format_date_for_db(dt_string: str):
         ), "%Y-%m-%d %H:%M:%S")
 
 
-# TODO: Update tests to check is_gmt flag functioning properly
 def to_datetime(datetime_str: str, is_gmt: bool = False):
     """
     Take a date/time string and convert into a naive datetime object
@@ -273,5 +269,3 @@ def get_last_6_months_date_range(end_date: Optional[datetime] = None):
             start_date = datetime(end_date.year, (end_date.month - 6) + 1, 1)
 
     return start_date, end_date
-
-
