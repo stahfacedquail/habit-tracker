@@ -6,11 +6,6 @@ from modules.cli.view_habit_detail import show_habits_abridged
 from modules.cli.view_stats import show_stats_menu
 
 
-# TODO: Pause between actions to let user first digest outcome, and then choose next action
-# TODO: Format dates nicely e.g. 23 December 2023
-# TODO: Headings to show where in the program the user is
-# TODO: Alignment in tables (especially stats one) -- field-dependent
-
 def show_home_menu(starting_up=False):
     """
     Shows the home menu containing the basic paths a user can take in this application

@@ -3,7 +3,8 @@ from typing import Optional, Callable
 from tabulate import tabulate
 
 from modules import habits
-from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range
+from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range, \
+    prettify_datetime
 from classes.habit import Habit
 from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range, close_app
 
@@ -49,9 +50,11 @@ def show_habit_actions_menu(habit: Habit):
     last_performed = habit.get_date_last_performed()
     questionary.print(f"""
 Title: {habit.get_title()}
-Date created: {habit.get_created_at()}
+Date created: {prettify_datetime(habit.get_created_at())}
 Recurrence: {habit.get_recurrence()}
-Last performed: {last_performed if last_performed is not None else "No activities recorded yet"}
+Last performed: {prettify_datetime(last_performed, False)
+                 if last_performed is not None
+                 else "No activities recorded yet"}
 Latest streak: {streak_message}
     """)
     questionary.press_any_key_to_continue().ask()
@@ -100,8 +103,8 @@ def show_streaks_menu(habit: Habit):
     else:
         streaks_table = list(map(lambda streak: [
             streak["length"],
-            streak["start"],
-            streak["end"],
+            prettify_datetime(streak["start"], False),
+            prettify_datetime(streak["end"], False),
         ], streaks))
         print(tabulate(streaks_table,
                        headers=[f"Length ({habit.get_interval_label()}s)", "From", "Until"],
@@ -111,7 +114,7 @@ def show_streaks_menu(habit: Habit):
 
     follow_up_action = questionary.select("What would you like to do next?", create_choices([
         ("change_sort", "Choose a different order to sort the streaks"),
-        ("habit_details", "Show the details of the habit"),
+        ("habit_details", "Go back to the details of this habit"),
         ("exit", "Exit"),
     ])).ask()
 
@@ -132,7 +135,7 @@ def show_completion_rate_menu(habit: Habit):
         ("last_wk", "Past 7 days"),
         ("last_mo", "Last month"),
         ("custom", "Custom"),
-     ]) if habit.get_recurrence() == "daily" else create_choices([
+    ]) if habit.get_recurrence() == "daily" else create_choices([
         ("last_mo", "Last month"),
         ("last_6_mo", "Last 6 months"),
         ("custom", "Custom"),
@@ -151,21 +154,19 @@ def show_completion_rate_menu(habit: Habit):
         else:
             (start_date, end_date) = get_last_6_months_date_range()
 
-    # Cap the date range so that it does not go beyond the date when the habit was created
-    start_date = max(start_date, habit.get_created_at())
     completion = habit.get_completion_rate(start_date, end_date)
 
-    completion_message_intro = f"From {start_date} to {end_date},"
-    completion_message = f"you have performed this habit on {completion['num_active_periods']} out of " +\
-        f"{completion['num_total_periods']} {habit.get_interval_label(completion['num_total_periods'])}.\n" +\
-        f"This is a completion rate of {round(100 * completion['rate'])}%."
+    completion_message_intro = f"From {prettify_datetime(start_date, False)} to {prettify_datetime(end_date, False)},"
+    completion_message = f"you have performed this habit on {completion['num_active_periods']} out of " + \
+                         f"{completion['num_total_periods']} {habit.get_interval_label(completion['num_total_periods'])}.\n" + \
+                         f"This is a completion rate of {round(100 * completion['rate'])}%."
     questionary.print(f"{completion_message_intro} {completion_message}")
 
     questionary.press_any_key_to_continue().ask()
 
     follow_up_action = questionary.select("What would you like to do next?", create_choices([
         ("different_date_range", "View your completion rate over a different date range"),
-        ("habit_details", "Show all the details of this habit"),
+        ("habit_details", "Go back to the details of this habit"),
         ("exit", "Exit"),
     ])).ask()
 

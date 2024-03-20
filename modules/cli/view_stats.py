@@ -1,8 +1,10 @@
 import questionary
 from typing import Optional, Callable
 from tabulate import tabulate
+from datetime import datetime
 
 from modules.cli.utils import create_choices, close_app
+from modules.utils import prettify_datetime
 from modules import analytics
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
@@ -223,7 +225,11 @@ def show_stats_menu(show_home_menu_fn: Callable):
         )
 
         print(tabulate(map(
-            lambda h: [value for (key, value) in h.items()],
+            lambda h: [
+                prettify_datetime(value, False) if isinstance(value, datetime)
+                else value
+                for (key, value) in h.items()
+            ],
             modified_habits_list
         ), headers=filtered_headers))
 
