@@ -2,7 +2,7 @@ from datetime import datetime
 from multimethod import multimethod
 from typing import Union, Optional
 
-from modules.db import create_habit, get_habit, delete_habit
+from modules.db import create_habit, get_habit, delete_habit, get_all_habits_abridged
 from modules import utils
 from classes.activity import Activity
 
@@ -313,3 +313,7 @@ Has been performed {len(self.__activities__)} time{"" if len(self.__activities__
             "num_total_periods": num_total_periods,
             "rate": num_active_dates / num_total_periods
         }
+
+    @staticmethod
+    def get_all_abridged():
+        return get_all_habits_abridged()

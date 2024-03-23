@@ -3,7 +3,6 @@ from typing import Optional, Callable
 from tabulate import tabulate
 from datetime import datetime
 
-from modules import habits
 from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range, \
     prettify_datetime, get_start_of_day, get_end_of_day
 from classes.habit import Habit
@@ -26,7 +25,7 @@ def show_habits_abridged(show_home_menu_fn: Optional[Callable] = None):
         show_home_menu = show_home_menu_fn
 
     print_menu_title("Your habits")
-    habits_list = habits.get_habits_abridged()
+    habits_list = Habit.get_all_abridged()
     action = questionary.select("Which habit would you like to look at?", create_choices(habits_list + [
         ("home", "Go back home"),
         ("exit", "Exit"),
@@ -57,7 +56,7 @@ def show_habit_actions_menu(habit: Habit):
         f"""Title: {habit.get_title()}
 Date created: {prettify_datetime(habit.get_created_at(), True)}
 Recurrence: {habit.get_recurrence()}
-Last performed: {prettify_datetime(last_performed)
+Last performed: {prettify_datetime(last_performed, True)
                  if last_performed is not None
                  else "No activities recorded yet"}
 Latest streak: {streak_message}
