@@ -6,6 +6,7 @@ from datetime import datetime
 
 from classes.habit import Habit
 from modules import db
+from modules.utils import prettify_datetime, get_start_of_day, get_end_of_day
 
 
 def create_choices(options: list[tuple], pre_selections: Optional[list[str]] = None):
@@ -54,12 +55,17 @@ def get_latest_streak_message(streak: dict, recurrence: str):
     interval = "day" if recurrence == "daily" else "week"
 
     if streak["is_current"] is False:  # most recent streak was broken
-        part_1 = f"Your last streak ran from {streak['start']} until {streak['end']}"
-        part_2 = f"— a {'decent' if streak['length'] <= 4 else 'whopping'}"
-        part_3 = f"{streak['length']} {interval}{'' if streak['length'] == 1 else 's'}!"
-        part_4 = "Today feels like a good day to start a new one 🚀"
+        if streak["length"] > 1:
+            part_1 = f"Your last streak ran from {prettify_datetime(streak['start'])} until {prettify_datetime(streak['end'])}"
+            part_2 = f"— a {'decent' if streak['length'] <= 4 else 'whopping'}"
+            part_3 = f"{streak['length']} {interval}{'' if streak['length'] == 1 else 's'}!"
+            part_4 = "Today feels like a good day to start a new one 🚀"
+            return f"{part_1} {part_2} {part_3}  {part_4}"
 
-        return f"{part_1} {part_2} {part_3}  {part_4}"
+        part_1 = f"The last time you performed this habit was on {prettify_datetime(streak['start'])};"
+        part_2 = f"you managed to keep it up for a {interval}!"
+        part_3 = "Today feels like a good day to pick up again 🚀"
+        return f"{part_1} {part_2} {part_3}"
 
     part_1 = "You are currently on a roll!"
     part_2 = f"You've kept up this habit for {streak['length']} {interval}{'' if streak['length'] == 1 else 's'} 🥳"
@@ -93,8 +99,8 @@ def get_custom_date_range():
             try:
                 # Attempt to create a datetime object from the date string supplied.  If the creation fails, we know
                 # either the user didn't follow the correct format or the date they've chosen doesn't exist...
-                dt = datetime.strptime(f"{date_text} {'00:00:00' if date_type == 'starting' else '23:59:59'}",
-                                       "%d-%m-%Y %H:%M:%S")
+                dt = datetime.strptime(f"{date_text}", "%d-%m-%Y")
+                dt = get_start_of_day(dt) if date_text == 'starting' else get_end_of_day(dt)
 
                 # If the user is specifying an end date for the range, we need to check that the end date comes after
                 # the start date they chose
