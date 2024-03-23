@@ -1,10 +1,11 @@
 import questionary
 from typing import Optional, Callable
 from tabulate import tabulate
+from datetime import datetime
 
 from modules import habits
 from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range, \
-    prettify_datetime
+    prettify_datetime, get_start_of_day, get_end_of_day
 from classes.habit import Habit
 from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range, close_app
 
@@ -50,9 +51,9 @@ def show_habit_actions_menu(habit: Habit):
     last_performed = habit.get_date_last_performed()
     questionary.print(f"""
 Title: {habit.get_title()}
-Date created: {prettify_datetime(habit.get_created_at())}
+Date created: {prettify_datetime(habit.get_created_at(), True)}
 Recurrence: {habit.get_recurrence()}
-Last performed: {prettify_datetime(last_performed, False)
+Last performed: {prettify_datetime(last_performed)
                  if last_performed is not None
                  else "No activities recorded yet"}
 Latest streak: {streak_message}
@@ -103,8 +104,8 @@ def show_streaks_menu(habit: Habit):
     else:
         streaks_table = list(map(lambda streak: [
             streak["length"],
-            prettify_datetime(streak["start"], False),
-            prettify_datetime(streak["end"], False),
+            prettify_datetime(streak["start"]),
+            prettify_datetime(streak["end"]),
         ], streaks))
         print(tabulate(streaks_table,
                        headers=[f"Length ({habit.get_interval_label()}s)", "From", "Until"],
@@ -154,9 +155,31 @@ def show_completion_rate_menu(habit: Habit):
         else:
             (start_date, end_date) = get_last_6_months_date_range()
 
-    completion = habit.get_completion_rate(start_date, end_date)
+    start_date_too_early = start_date < get_start_of_day(habit.get_created_at())
+    end_date_too_late = end_date > get_end_of_day(datetime.today())
+    if start_date_too_early or end_date_too_late:
+        if start_date_too_early and end_date_too_late:
+            questionary.print(f"Note that this habit was created on {prettify_datetime(habit.get_created_at())},"
+                              " and the date range that you've chosen starts before that." +
+                              f"  Additionally, the date today is {prettify_datetime(datetime.today())}," +
+                              " and the date range that you've chosen ends after that." +
+                              "  As a result, the completion rate you will see might be lower than how you have" +
+                              " actually performed up to today.")
+        elif start_date_too_early:
+            questionary.print(f"Note that this habit was created on {prettify_datetime(habit.get_created_at())}," +
+                              " and the date range that you've chosen starts before that." +
+                              "  As a result, the completion rate you will see might be lower than how you have" +
+                              " actually performed since you started recording this habit.")
+        else:  # end_date_too_late is True
+            questionary.print(f"Note that the date today is {prettify_datetime(datetime.today())}," +
+                              " and the date range that you've chosen ends after that." +
+                              "  As a result, the completion rate you will see might be lower than how you have" +
+                              " actually performed up to today.")
 
-    completion_message_intro = f"From {prettify_datetime(start_date, False)} to {prettify_datetime(end_date, False)},"
+        questionary.press_any_key_to_continue().ask()
+
+    completion = habit.get_completion_rate(start_date, end_date)
+    completion_message_intro = f"From {prettify_datetime(start_date, False)} to {prettify_datetime(end_date)},"
     completion_message = f"you have performed this habit on {completion['num_active_periods']} out of " + \
                          f"{completion['num_total_periods']} {habit.get_interval_label(completion['num_total_periods'])}.\n" + \
                          f"This is a completion rate of {round(100 * completion['rate'])}%."
