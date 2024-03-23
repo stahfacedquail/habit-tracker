@@ -226,7 +226,7 @@ def show_stats_menu(show_home_menu_fn: Callable):
 
         print(tabulate(map(
             lambda h: [
-                prettify_datetime(value, False) if isinstance(value, datetime)
+                prettify_datetime(value) if isinstance(value, datetime)
                 else value
                 for (key, value) in h.items()
             ],
