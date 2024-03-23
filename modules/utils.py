@@ -79,6 +79,7 @@ def prettify_datetime(dt: datetime, with_time=False):
 
     return dt.strftime("%-d %B %Y")
 
+
 def get_start_of_day(dt: datetime):
     """
     :param dt: A datetime object (local time)
@@ -93,6 +94,7 @@ def get_end_of_day(dt: datetime):
     :return: A new datetime object where the time on that date is 23:59:59 (local time)
     """
     return dt.replace(hour=23, minute=59, second=59, microsecond=0)
+
 
 def get_num_days_from_to(start_date: datetime, end_date: datetime, inclusive: bool = True):
     """
@@ -187,7 +189,7 @@ def group_activities_by_performance_period(activities: list[object], habit_recur
     return reduce(group_by_date, augmented_activities, {})
 
 
-def get_streak_accurate_params(start_date_activities: str, end_date_activities: str, habit: object):
+def get_streak_accurate_params(start_date_activities: list, end_date_activities: list, habit: object):
     """
     Given the activities from the streak's start date and the activities from the streak's end date, figure out the
     earliest activity in the first batch and the latest activity in the latter; these are the accurate beginning and
