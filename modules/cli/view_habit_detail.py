@@ -7,7 +7,8 @@ from modules import habits
 from modules.utils import get_last_month_date_range, get_last_week_date_range, get_last_6_months_date_range, \
     prettify_datetime, get_start_of_day, get_end_of_day
 from classes.habit import Habit
-from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range, close_app
+from modules.cli.utils import create_choices, get_latest_streak_message, perform_habit, get_custom_date_range,  \
+    close_app, print_menu_title, print_success_message
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
 # circular imports)
@@ -24,6 +25,7 @@ def show_habits_abridged(show_home_menu_fn: Optional[Callable] = None):
     if show_home_menu_fn is not None:
         show_home_menu = show_home_menu_fn
 
+    print_menu_title("Your habits")
     habits_list = habits.get_habits_abridged()
     action = questionary.select("Which habit would you like to look at?", create_choices(habits_list + [
         ("home", "Go back home"),
@@ -45,19 +47,21 @@ def show_habit_actions_menu(habit: Habit):
     Show a menu with the actions that can be executed on a given habit
     :param habit: The habit that the user wants to see details of or mark as done etc.
     """
+    print_menu_title(f"Habit: {habit.get_title()}")
+
     latest_streak = habit.get_latest_streak()
     streak_message = get_latest_streak_message(latest_streak, habit.get_recurrence())
 
     last_performed = habit.get_date_last_performed()
-    questionary.print(f"""
-Title: {habit.get_title()}
+    questionary.print(
+        f"""Title: {habit.get_title()}
 Date created: {prettify_datetime(habit.get_created_at(), True)}
 Recurrence: {habit.get_recurrence()}
 Last performed: {prettify_datetime(last_performed)
                  if last_performed is not None
                  else "No activities recorded yet"}
 Latest streak: {streak_message}
-    """)
+""")
     questionary.press_any_key_to_continue().ask()
 
     action = questionary.select("What would you like to do next?", create_choices([
@@ -88,6 +92,8 @@ def show_streaks_menu(habit: Habit):
     Show the user the streaks they have achieved for a given habit, with the options to sort the streaks
     :param habit: The habit whose streaks will be shown
     """
+    print_menu_title(f"Streaks for '{habit.get_title()}'")
+
     sort_field = questionary.select("Sort the streaks by:", create_choices([
         ("date", "when they started"),
         ("length", "length"),
@@ -100,7 +106,7 @@ def show_streaks_menu(habit: Habit):
 
     streaks = habit.get_all_streaks(sort_field, sort_order)
     if len(streaks) == 0:
-        questionary.print("You haven't achieved any streaks yet 🥺")
+        questionary.print("Sorry for all that hassle, but you haven't achieved any streaks yet 🥺")
     else:
         streaks_table = list(map(lambda streak: [
             streak["length"],
@@ -132,6 +138,8 @@ def show_completion_rate_menu(habit: Habit):
     Show the user how successfully they completed a given habit over a certain period.
     :param habit: The habit whose completion rate the user wants to see
     """
+    print_menu_title(f"Completion rate for '{habit.get_title()}'")
+
     date_ranges = create_choices([
         ("last_wk", "Past 7 days"),
         ("last_mo", "Last month"),
@@ -206,10 +214,12 @@ def show_delete_habit_menu(habit: Habit):
     Display the UI for the user to delete a given habit.
     :param habit: The habit the user wants to delete
     """
+    print(f"Delete '{habit.get_title()}'")
+
     confirm_delete = questionary.confirm("Are you sure you want to delete this habit?").ask()
     if confirm_delete:
         habit.remove()
-        questionary.print("The habit was successfully deleted.", style="fg:lime")
+        print_success_message("The habit was successfully deleted.")
 
         questionary.press_any_key_to_continue().ask()
 

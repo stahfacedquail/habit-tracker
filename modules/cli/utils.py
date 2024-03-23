@@ -125,5 +125,23 @@ def close_app():
     Before exiting the program, close the database connection and print a goodbye message.
     """
     db.disconnect()
-    questionary.print("Cheerio! :)")
+    print_greeting("Cheerio! :)")
     sys.exit(0)
+
+
+def print_menu_title(title: str):
+    questionary.print(f"*** {title.upper()} ***", style="bold bg:darkmagenta fg:white")
+
+
+def print_greeting(greeting: str):
+    greeting = f"--- {greeting} ---"
+    num_chars_in_greeting = len(greeting)
+    dashes = "-" * num_chars_in_greeting
+
+    questionary.print(dashes, style="aqua")
+    questionary.print(greeting, style="aqua")
+    questionary.print(dashes, style="aqua")
+
+
+def print_success_message(message: str):
+    questionary.print(message, style="fg:lime")

@@ -2,7 +2,7 @@ import questionary
 from typing import Callable
 
 from classes.habit import Habit
-from modules.cli.utils import create_choices, perform_habit, close_app
+from modules.cli.utils import create_choices, perform_habit, close_app, print_menu_title, print_success_message
 
 # Stores the function to invoke in order to show the Home menu (avoiding exporting it from original module and causing
 # circular imports)
@@ -17,6 +17,7 @@ def show_create_habit_menu(show_home_menu_fn: Callable):
     global show_home_menu
     show_home_menu = show_home_menu_fn
 
+    print_menu_title("Create a habit")
     title = None
     while title is None or len(title) == 0:
         title = questionary.text("What is the title of your new habit?").ask()
@@ -28,8 +29,7 @@ def show_create_habit_menu(show_home_menu_fn: Callable):
 
     new_habit = Habit(title, recurrence)
 
-    questionary.print(f"Your new habit '{new_habit.get_title()}' was successfully created.", style="fg:lime")
-
+    print_success_message(f"Your new habit '{new_habit.get_title()}' was successfully created.")
     questionary.press_any_key_to_continue().ask()
     show_create_habit_follow_up_menu(new_habit)
 

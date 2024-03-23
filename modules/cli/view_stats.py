@@ -3,7 +3,7 @@ from typing import Optional, Callable
 from tabulate import tabulate
 from datetime import datetime
 
-from modules.cli.utils import create_choices, close_app
+from modules.cli.utils import create_choices, close_app, print_menu_title
 from modules.utils import prettify_datetime
 from modules import analytics
 
@@ -72,6 +72,8 @@ def show_select_columns_menu(pre_selected_columns: Optional[list[str]] = None):
     Let the user decide which properties they want to view in the full list of their habits
     :return: The list of properties the user would like to view, where "title" is always included
     """
+    print_menu_title("Choose columns")
+
     columns = questionary.checkbox("Choose the details you would like to see:", create_choices([
         ("created_at", "Date the habit was created"),
         ("recurrence", "How often the habit should be performed"),
@@ -223,6 +225,20 @@ def show_stats_menu(show_home_menu_fn: Callable):
         modified_habits_list = apply_modifications(
             full_habits_list, columns, (sort_field, sort_order), (filter_field, filter_option)
         )
+
+        menu_subtitle = None
+        if filter_field is not None or sort_field is not None:
+            if filter_field is not None and sort_field is not None:
+                menu_subtitle = f"(only habits with {stats_fields[filter_field]['label']} = '{filter_option}'," +  \
+                    f" sorted by {stats_fields[sort_field]['label']} ({sort_order}ending))"
+            elif sort_field is not None:
+                menu_subtitle = f"(sorted by {stats_fields[sort_field]['label']} ({sort_order}ending))"
+            else:  # only a filter has been applied
+                menu_subtitle = f"(only habits with {stats_fields[filter_field]['label']} = '{filter_option}')"
+
+        print_menu_title("Your stats")
+        if menu_subtitle is not None:
+            questionary.print(menu_subtitle, style="italic bg:darkmagenta fg:gainsboro")
 
         print(tabulate(map(
             lambda h: [
