@@ -67,7 +67,7 @@ def to_date_only_string(dt: datetime):
     return dt.strftime("%Y-%m-%d")
 
 
-def prettify_datetime(dt: datetime, with_time=True):
+def prettify_datetime(dt: datetime, with_time=False):
     """
     Get a prettified string of the given datetime object
     :param dt: A datetime object (local time)
@@ -86,6 +86,13 @@ def get_start_of_day(dt: datetime):
     """
     return datetime(dt.year, dt.month, dt.day)
 
+
+def get_end_of_day(dt: datetime):
+    """
+    :param dt: A datetime object (local time)
+    :return: A new datetime object where the time on that date is 23:59:59 (local time)
+    """
+    return dt.replace(hour=23, minute=59, second=59, microsecond=0)
 
 def get_num_days_from_to(start_date: datetime, end_date: datetime, inclusive: bool = True):
     """

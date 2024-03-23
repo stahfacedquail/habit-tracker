@@ -59,9 +59,19 @@ class TestUtils:
         assert zeroed_dt.minute == 0
         assert zeroed_dt.second == 0
 
+    def test_get_end_of_day(self):
+        dt = datetime(2023, 12, 25, 15, 22, 45)
+        new_dt = utils.get_end_of_day(dt)
+        assert new_dt.day == 25
+        assert new_dt.month == 12
+        assert new_dt.year == 2023
+        assert new_dt.hour == 23
+        assert new_dt.minute == 59
+        assert new_dt.second == 59
+
     def test_prettify_date(self):
         dt = datetime(2023, 12, 5, 8, 5, 34)
-        assert utils.prettify_datetime(dt) == "5 December 2023, 08:05"
+        assert utils.prettify_datetime(dt, True) == "5 December 2023, 08:05"
         assert utils.prettify_datetime(dt, False) == "5 December 2023"
 
     def test_get_num_days_from_to(self):
