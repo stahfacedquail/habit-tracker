@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 
 
 today = datetime.today()
-start = today - timedelta(days=18)
+start = today - timedelta(days=28)
 
-day = []  # dates from `start` until 17 days later
-for index in range(18):
+day = []  # dates from `start` until 27 days later
+for index in range(28):
     day.append(start + timedelta(days=index))
 
 
@@ -33,12 +33,20 @@ activities = [
     (make_uuid(), habits[0][0], date_to_string(day[13].replace(hour=19, minute=59, second=43))),
     (make_uuid(), habits[0][0], date_to_string(day[16].replace(hour=19, minute=58, second=55))),
     (make_uuid(), habits[0][0], date_to_string(day[17].replace(hour=19, minute=37, second=26))),
+    (make_uuid(), habits[0][0], date_to_string(day[19].replace(hour=7, minute=30, second=45))),
+    (make_uuid(), habits[0][0], date_to_string(day[20].replace(hour=20, minute=17, second=1))),
+    (make_uuid(), habits[0][0], date_to_string(day[23].replace(hour=15, minute=30, second=40))),
+    (make_uuid(), habits[0][0], date_to_string(day[25].replace(hour=6, minute=55, second=11))),
+    (make_uuid(), habits[0][0], date_to_string(day[26].replace(hour=6, minute=51, second=20))),
 
     (make_uuid(), habits[1][0], date_to_string(day[0].replace(hour=16, minute=45, second=13))),
     (make_uuid(), habits[1][0], date_to_string(day[3].replace(hour=11, minute=33, second=47))),
     (make_uuid(), habits[1][0], date_to_string(day[8].replace(hour=13, minute=8, second=4))),
     (make_uuid(), habits[1][0], date_to_string(day[10].replace(hour=18, minute=5, second=18))),
     (make_uuid(), habits[1][0], date_to_string(day[16].replace(hour=15, minute=12, second=35))),
+    (make_uuid(), habits[1][0], date_to_string(day[23].replace(hour=19, minute=14, second=17))),
+    (make_uuid(), habits[1][0], date_to_string(day[24].replace(hour=6, minute=46, second=13))),
+    (make_uuid(), habits[1][0], date_to_string(day[27].replace(hour=7, minute=55, second=55))),
 
     (make_uuid(), habits[2][0], date_to_string(day[5].replace(hour=12, minute=28, second=52))),
     (make_uuid(), habits[2][0], date_to_string(day[6].replace(hour=8, minute=24, second=52))),
@@ -46,9 +54,16 @@ activities = [
     (make_uuid(), habits[2][0], date_to_string(day[12].replace(hour=15, minute=43, second=49))),
     (make_uuid(), habits[2][0], date_to_string(day[15].replace(hour=17, minute=3, second=10))),
     (make_uuid(), habits[2][0], date_to_string(day[16].replace(hour=6, minute=25, second=32))),
+    (make_uuid(), habits[2][0], date_to_string(day[20].replace(hour=5, minute=47, second=29))),
+    (make_uuid(), habits[2][0], date_to_string(day[22].replace(hour=16, minute=52, second=4))),
+    (make_uuid(), habits[2][0], date_to_string(day[23].replace(hour=7, minute=29, second=16))),
 
     (make_uuid(), habits[3][0], date_to_string(day[13].replace(hour=22, minute=17, second=43))),
+    (make_uuid(), habits[3][0], date_to_string(day[19].replace(hour=16, minute=34, second=39))),
+    (make_uuid(), habits[3][0], date_to_string(day[27].replace(hour=15, minute=8, second=27))),
 
     (make_uuid(), habits[4][0], date_to_string(day[5].replace(hour=19, minute=23, second=57))),
-    (make_uuid(), habits[4][0], date_to_string(day[15].replace(hour=19, minute=30, second=0))),
+    (make_uuid(), habits[4][0], date_to_string(day[19].replace(hour=6, minute=31, second=58))),
+    (make_uuid(), habits[4][0], date_to_string(day[21].replace(hour=5, minute=49, second=20))),
+    (make_uuid(), habits[4][0], date_to_string(day[24].replace(hour=6, minute=45, second=31))),
 ]
