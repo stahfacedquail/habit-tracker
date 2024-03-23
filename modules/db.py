@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Optional
+from typing import Optional, Union
 
 from modules import example_data
 from modules.utils import make_uuid
@@ -111,7 +111,7 @@ def create_habit(title, recurrence, created_at: Optional[str] = None):
     return get_habit(uuid)
 
 
-def create_activity(habit_uuid, performed_at):
+def create_activity(habit_uuid, performed_at) -> tuple:
     """
         Create a record in the database for this performance of a given habit
         :param habit_uuid: The uuid of the habit that was performed
@@ -136,7 +136,7 @@ def create_activity(habit_uuid, performed_at):
     return cur.fetchone()
 
 
-def get_habit(uuid):
+def get_habit(uuid) -> dict[str, Union[tuple, list[tuple]]]:
     cur = db_connection.cursor()
     cur.execute("SELECT * FROM habits WHERE uuid = ?", (uuid, ))
     habit = cur.fetchone()
@@ -197,7 +197,11 @@ def get_all_habits():
     return augmented_habits
 
 
-def get_all_habits_abridged():
+def get_all_habits_abridged() -> tuple[str, str]:
+    """
+    Fetch a list of all the habits, but only returning their UUIDs and titles
+    :return: A list of tuples, where each tuple comprises two strings
+    """
     cur = db_connection.cursor()
     cur.execute("SELECT uuid, title FROM habits")
     habits = cur.fetchall()
