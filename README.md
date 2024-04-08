@@ -4,6 +4,8 @@ This is a habit-tracking application, designed to help you keep track of a set o
 ## Install dependencies
 `pip3 install -r requirements.txt`
 
+This application needs a Python version >= 3.12.1 to run.
+
 ## Run the application
 `python3 main.py`
 
