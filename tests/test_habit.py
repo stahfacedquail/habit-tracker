@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from freezegun import freeze_time
 from modules import db
 from modules.utils import to_datetime
 from classes.habit import Habit
@@ -60,6 +61,7 @@ class TestHabit:
         assert habit_copy.get_created_at() == to_datetime("2023-05-28 19:01:33")
         assert len(habit_copy.get_activities()) == 1
 
+    @freeze_time(tz_offset=+6)
     def test_initialise_from_db_dict_item(self):
         db_item = {
             "habit": ("01234567-89ab-cdef-0123-456789abcdef", "Practise piano", "daily", "2023-05-28 19:33:12"),
@@ -72,7 +74,7 @@ class TestHabit:
         assert habit_model.get_uuid() == "01234567-89ab-cdef-0123-456789abcdef"
         assert habit_model.get_title() == "Practise piano"
         assert habit_model.get_recurrence() == "daily"
-        assert habit_model.get_created_at() == to_datetime("2023-05-28 19:33:12", True)  # "straight" from db
+        assert habit_model.get_created_at() == to_datetime("2023-05-29 01:33:12")
         assert len(habit_model.get_activities()) == 2
 
     def test_to_string(self):
